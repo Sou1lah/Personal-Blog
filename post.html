@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Blog Post</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .post-page {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 0;
+      border-left: 3px solid var(--brown);
+      border-right: 3px solid var(--brown);
+      min-height: 100vh;
+      background: var(--cream);
+      position: relative;
+    }
+
+    .post-banner {
+      height: 300px;
+      background: linear-gradient(135deg, #d4c5b9 0%, #a89f99 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .post-banner::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 100px;
+      background: linear-gradient(to bottom, transparent, var(--cream));
+      pointer-events: none;
+    }
+
+    .post-header {
+      margin-bottom: 40px;
+      padding: 40px 40px 20px 40px;
+      border-bottom: 3px solid var(--brown);
+    }
+
+    .post-meta {
+      font-weight: 400;
+    }
+
+    .post-header h1 {
+      font-size: 2rem;
+      margin: 0 0 10px 0;
+    }
+
+    .post-body {
+      padding: 40px 40px 40px 40px;
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: var(--brown);
+      white-space: pre-wrap;
+    }
+
+    .post-body::first-letter {
+      font-size: 3.5rem;
+      font-weight: 700;
+      float: left;
+      line-height: 2.5rem;
+      padding-right: 8px;
+      padding-top: 6px;
+    }
+
+    .back-btn {
+      display: inline-block;
+      padding: 8px 16px;
+      background: var(--brown);
+      color: var(--cream);
+      text-decoration: none;
+      border-radius: 50px;
+      border: 3px solid var(--brown);
+      font-weight: 700;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 20;
+    }
+
+    .back-btn:hover {
+      background: var(--cream);
+      color: var(--brown);
+    }
+  </style>
+</head>
+<body>
+  <div class="post-page">
+    <a href="index.html" class="back-btn">← Back</a>
+    
+    <div class="post-banner"></div>
+    
+    <div class="post-header">
+      <h1 id="postTitle">Post Title</h1>
+      <div class="post-meta">
+        <span class="post-date" id="postDate">Date</span>
+      </div>
+    </div>
+
+    <div class="post-body" id="postContent">
+      Post content will load here...
+    </div>
+  </div>
+
+  <script>
+    // Post data
+    const postsData = {
+      1: {
+        title: "How to actually sit with your feelings",
+        author: "me Souilah",
+        date: "JAN 10, 2026",
+        content: "Have you ever wondered why some people seem to move past things so effortlessly, while others have a harder time even acknowledging their feelings, let alone processing and letting them go? If you have, I'm writing this for you. From both an anecdotal and scientific perspective.\n\nI used to be close friends with a girl I really admired, particularly for her ability to get over things instantly. While I took days if not weeks to decide how I felt about something (which I now realize is an avoidance tactic), I can remember thinking I did hope to be able to do that."
+      },
+      2: {
+        title: "Design Principles for Modern Web",
+        author: "me Souilah",
+        date: "JAN 12, 2026",
+        content: "Explore the intersection of design and functionality in modern web development. Learn best practices for creating user-friendly interfaces that users will love.\n\nIn today's digital landscape, design is not just about aesthetics. It's about creating experiences that delight, engage, and convert. From typography to color theory, every element plays a role in the overall user experience."
+      },
+      3: {
+        title: "Starting Your Business: A Guide",
+        author: "me Souilah",
+        date: "JAN 08, 2026",
+        content: "In this comprehensive guide, we'll walk you through the essentials of starting your own business. From planning to execution, discover the key steps to success.\n\nStarting a business is a journey filled with challenges and opportunities. Whether you're launching your first venture or your fifth, understanding the fundamentals is crucial. This guide covers market research, business planning, funding options, and more."
+      },
+      4: {
+        title: "Web Development Fundamentals",
+        author: "me Souilah",
+        date: "JAN 05, 2026",
+        content: "Learn the fundamentals of web development and start building amazing websites today. This tutorial covers HTML, CSS, and JavaScript basics.\n\nWeb development is one of the most accessible fields to enter in tech. With just a computer and internet connection, you can start learning and building projects that reach millions of people worldwide. This comprehensive introduction will get you started on your journey."
+      }
+    };
+
+    // Get post ID from URL
+    const params = new URLSearchParams(window.location.search);
+    const postId = params.get('id');
+
+    // Load post data
+    if (postId && postsData[postId]) {
+      const post = postsData[postId];
+      document.title = post.title + " - My Blog";
+      document.getElementById('postTitle').textContent = post.title;
+      document.getElementById('postAuthor').textContent = post.author;
+      document.getElementById('postDate').textContent = post.date;
+      document.getElementById('postContent').textContent = post.content;
+    } else {
+      document.getElementById('postTitle').textContent = "Post Not Found";
+      document.getElementById('postContent').textContent = "The post you're looking for doesn't exist.";
+    }
+  </script>
+</body>
+</html>
