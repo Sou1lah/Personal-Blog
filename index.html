@@ -158,8 +158,16 @@
                   console.log('Setting banner:', bannerUrl);
                   bannerElement.style.backgroundImage = `url("${bannerUrl}")`;
                   bannerElement.style.backgroundColor = 'transparent';
+                } else {
+                  // Placeholder if no banner found - use gradient
+                  bannerElement.style.backgroundImage = 'linear-gradient(135deg, #d4c5b9 0%, #a89f99 100%)';
+                  bannerElement.style.backgroundColor = '#d4c5b9';
                 }
                 content = markdown.replace(frontmatterRegex, '');
+              } else {
+                // Placeholder if no frontmatter found
+                bannerElement.style.backgroundImage = 'linear-gradient(135deg, #d4c5b9 0%, #a89f99 100%)';
+                bannerElement.style.backgroundColor = '#d4c5b9';
               }
               
               const html = marked.parse(content);
