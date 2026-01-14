@@ -6,6 +6,7 @@
   <title>Blog Post</title>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     .post-page {
       max-width: 700px;
@@ -110,6 +111,13 @@
   </div>
 
   <script>
+    const GITHUB_RAW = 'https://raw.githubusercontent.com/Sou1lah/Personal-Blog/main';
+    
+    // Get post ID or note from URL
+    const params = new URLSearchParams(window.location.search);
+    const postId = params.get('id');
+    const notePath = params.get('note');
+
     // Post data
     const postsData = {
       1: {
@@ -138,21 +146,78 @@
       }
     };
 
-    // Get post ID from URL
-    const params = new URLSearchParams(window.location.search);
-    const postId = params.get('id');
-
-    // Load post data
-    if (postId && postsData[postId]) {
+    // Load blog post or note
+    if (notePath) {
+      // Load note from wiki
+      loadNoteContent(notePath);
+    } else if (postId && postsData[postId]) {
+      // Load blog post
       const post = postsData[postId];
       document.title = post.title + " - My Blog";
       document.getElementById('postTitle').textContent = post.title;
-      document.getElementById('postAuthor').textContent = post.author;
       document.getElementById('postDate').textContent = post.date;
       document.getElementById('postContent').textContent = post.content;
     } else {
       document.getElementById('postTitle').textContent = "Post Not Found";
       document.getElementById('postContent').textContent = "The post you're looking for doesn't exist.";
+    }
+
+    async function loadNoteContent(path) {
+      try {
+        const rawUrl = `${GITHUB_RAW}/${path}`;
+        const response = await fetch(rawUrl);
+        
+        if (!response.ok) {
+          throw new Error('Failed to load note');
+        }
+        
+        const markdown = await response.text();
+        
+        // Extract frontmatter (banner URL)
+        let bannerUrl = null;
+        let content = markdown;
+        
+        const frontmatterRegex = /^---\n([\s\S]*?)\n---\n/;
+        const match = markdown.match(frontmatterRegex);
+        
+        if (match) {
+          const frontmatter = match[1];
+          const bannerMatch = frontmatter.match(/banner:\s*(.+)/);
+          if (bannerMatch) {
+            bannerUrl = bannerMatch[1].trim();
+          }
+          // Remove frontmatter from content
+          content = markdown.replace(frontmatterRegex, '');
+        }
+        
+        // Set banner image if found
+        if (bannerUrl) {
+          const banner = document.querySelector('.post-banner');
+          banner.style.backgroundImage = `url('${bannerUrl}')`;
+          banner.style.backgroundSize = 'cover';
+          banner.style.backgroundPosition = 'center';
+        }
+        
+        // Parse and render markdown
+        const html = marked.parse(content);
+        
+        // Extract title from filename
+        const filename = path.split('/').pop().replace('.md', '').replace(/_/g, ' ');
+        
+        document.title = filename + " - My Notes";
+        document.getElementById('postTitle').textContent = filename;
+        document.getElementById('postDate').textContent = "Note";
+        
+        // Display as formatted markdown HTML
+        const postBody = document.getElementById('postContent');
+        postBody.innerHTML = html;
+        postBody.style.whiteSpace = 'normal';
+        postBody.style.padding = '40px 40px 40px 40px';
+      } catch (error) {
+        console.error('Error loading note:', error);
+        document.getElementById('postTitle').textContent = "Error Loading Note";
+        document.getElementById('postContent').textContent = "Failed to load the note. Please try again.";
+      }
     }
   </script>
 </body>
