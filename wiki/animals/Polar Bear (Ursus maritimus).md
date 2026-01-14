@@ -9,7 +9,7 @@ banner: https://i.natgeofe.com/k/e444dfeb-d4cd-4bc5-8f8d-003883039447/Fur_Polar-
   </div>
   <div class="column-spacer"></div>
   <div class="column-right">
-    <img src="polarbear.jpg" alt="Polar Bear in Den">
+    <img src="../assets/polarbear.jpg" alt="Polar Bear in Den">
   </div>
 </div>
 
@@ -71,12 +71,6 @@ banner: https://i.natgeofe.com/k/e444dfeb-d4cd-4bc5-8f8d-003883039447/Fur_Polar-
 
 **Opportunistic feeding:** When sea ice is scarce, polar bears may eat carcasses or opportunistically consume birds, eggs, fish, vegetation, and even human refuse. However, terrestrial foods cannot replace the high-calorie seal blubber they require.
 
-```media-slider
-![[ringedselas.jpg]]
-![[seals.webp]]
-![[carcases.jpg]]
-![[whales.jpg]]
-```
 
 ## Behavior
 
