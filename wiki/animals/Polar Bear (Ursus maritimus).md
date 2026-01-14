@@ -1,11 +1,5 @@
 ---
-banner: "![[polarbear.jpg]]"
-cssclasses:
-  - bg--lines
-banner-x: 50
-banner-y: 40
-content-start: 271
-banner-fade: -15
+banner: https://i.natgeofe.com/k/e444dfeb-d4cd-4bc5-8f8d-003883039447/Fur_Polar-Bear_KIDS_0223-crop.jpg?wp=1&w=1084.125&h=609
 ---
 <div class="responsive-columns">
   <div class="column-left">
