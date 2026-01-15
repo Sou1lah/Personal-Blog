@@ -242,11 +242,8 @@
                 <div class="note-banner" data-raw-url="${rawUrl}" style="width: 100%; height: 140px; background-color: #d4c5b9; background-size: cover; background-position: center; background-repeat: no-repeat; border-radius: 10px 10px 0 0;"></div>
                 <h3 class="card-title" style="margin-top: 12px;">${title}</h3>
                 <div style="flex: 1;"></div>
-                <div class="note-tags-scroll-wrap" style="position: absolute; left: 16px; right: 110px; bottom: 18px; z-index: 2; pointer-events: auto;">
-                  <div class="note-tags" style="display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--brown, #a89f99) var(--cream, #fff); padding-bottom: 2px; -webkit-overflow-scrolling: touch; max-width: 100%; position: relative;"></div>
-                  <div class="tags-fade" style="position: absolute; right: 0; top: 0; width: 40px; height: 100%; pointer-events: none; background: linear-gradient(to right, transparent, var(--cream, #f5f0e6) 80%);"></div>
-                </div>
-                <a href="post.html?note=${encodeURIComponent(path)}" class="btn" style="margin-top: 12px; align-self: flex-end; position: absolute; right: 16px; bottom: 12px;">Read</a>
+                <div class="note-tags" style="position: absolute; left: 16px; bottom: 18px; display: flex; flex-wrap: wrap; gap: 6px; z-index: 2;"></div>
+                <a href="post.html?note=${encodeURIComponent(path)}" class="btn" style="margin-top: 12px; align-self: flex-end;">Read</a>
               </article>
             `;
           }
@@ -277,35 +274,29 @@
                   bannerUrl = bannerUrl.replace('/wiki/', `${GITHUB_RAW}/`);
                 }
               }
-              // Parse YAML array tags, but only keep those that are hashtags or look like tags (no plain words like 'clippings')
+              // Parse YAML array tags
               const tagsMatch = fm[1].match(/tags\s*:\s*\n([\s\S]*?)(\n\w|\ncssclasses:|$)/);
               if (tagsMatch) {
-                tags = tagsMatch[1]
-                  .split('\n')
-                  .map(t => t.replace(/^-\s*/, '').trim())
-                  .filter(Boolean)
-                  .filter(t => t.startsWith('#'))
-                  .map(t => t.replace(/^#/, ''));
+                tags = tagsMatch[1].split('\n').map(t => t.replace(/^-\s*/, '').trim()).filter(Boolean);
               }
               // Parse inline tags (e.g. tags: #tag1 #tag2 or tags: tag1, tag2)
               const tagsInline = fm[1].match(/tags\s*:?\s*([^\n]+)/);
               if (tagsInline) {
+                // Extract hashtags and/or comma/space separated tags
                 const inline = tagsInline[1];
                 // Find all #hashtags
                 const hashTags = Array.from(inline.matchAll(/#(\w[\w-]*)/g)).map(m => m[1]);
                 // Find comma-separated tags
-                const commaTags = inline.split(',').map(t => t.trim()).filter(t => t && t.startsWith('#')).map(t => t.replace(/^#/, ''));
+                const commaTags = inline.split(',').map(t => t.trim()).filter(t => t && !t.startsWith('#'));
                 // Find space-separated tags (if not comma-separated)
                 let spaceTags = [];
                 if (!inline.includes(',')) {
-                  spaceTags = inline.split(/\s+/)
-                    .filter(t => t.startsWith('#'))
-                    .map(t => t.replace(/^#/, ''));
+                  spaceTags = inline.split(/\s+/).map(t => t.replace(/^#/, '').trim()).filter(t => t && t !== '');
                 }
                 tags = tags.concat(hashTags, commaTags, spaceTags);
               }
-              // Deduplicate and filter out stray dashes or empty
-              tags = Array.from(new Set(tags.map(t => t.replace(/^#/, '').trim()).filter(Boolean).filter(t => t !== '-' && t !== '–' && t !== '—')));
+              // Deduplicate tags
+              tags = Array.from(new Set(tags.map(t => t.replace(/^#/, '').trim()).filter(Boolean)));
             }
             if (bannerUrl) {
               bannerElement.style.backgroundImage = `url('${bannerUrl}')`;
@@ -355,7 +346,7 @@
             if (card && tags.length) {
               const tagsDiv = card.querySelector('.note-tags');
               if (tagsDiv) {
-                tagsDiv.innerHTML = tags.map(tag => `<span style="display:inline-block;background:var(--brown, #a89f99);color:var(--cream, #fff);font-size:0.85em;padding:2px 10px 2px 10px;border-radius:50px;box-shadow:0 1px 4px #0001;white-space:nowrap;">${tag}</span>`).join(' ');
+                tagsDiv.innerHTML = tags.map(tag => `<span style="display:inline-block;background:var(--brown, #a89f99);color:var(--cream, #fff);font-size:0.85em;padding:2px 10px 2px 10px;border-radius:50px;margin-right:2px;box-shadow:0 1px 4px #0001;">${tag}</span>`).join(' ');
               }
             }
           } catch (e) {
