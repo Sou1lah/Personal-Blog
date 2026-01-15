@@ -221,9 +221,10 @@
         
         const markdown = await response.text();
         
-        // Extract frontmatter (banner URL)
+        // Extract frontmatter (banner URL) and detect display flags like No_upchar
         let bannerUrl = null;
         let content = markdown;
+        let hasNoUpChar = false;
         
         const frontmatterRegex = /^---\n([\s\S]*?)\n---\n/;
         const match = markdown.match(frontmatterRegex);
@@ -234,6 +235,8 @@
           if (bannerMatch) {
             bannerUrl = bannerMatch[1].trim();
           }
+          // Detect a No_upchar flag (case-insensitive, '#' optional) in frontmatter
+          hasNoUpChar = /(?:^|\s)#?no_upchar\b/i.test(frontmatter);
           // Remove frontmatter from content
           content = markdown.replace(frontmatterRegex, '');
         }
@@ -283,7 +286,8 @@
         const filename = path.split('/').pop().replace('.md', '').replace(/_/g, ' ');
 
         document.title = filename + " - My Notes";
-        document.getElementById('postTitle').textContent = filename;
+        const displayTitle = hasNoUpChar && filename.length ? (filename.charAt(0).toLowerCase() + filename.slice(1)) : filename;
+        document.getElementById('postTitle').textContent = displayTitle;
         document.getElementById('postDate').textContent = "Note";
 
         // Display as formatted markdown HTML
@@ -291,10 +295,23 @@
         postBody.innerHTML = container.innerHTML;
         postBody.style.whiteSpace = 'normal';
         postBody.style.padding = '40px 40px 40px 40px';
-        // Add dropcap class to first paragraph only
+        // Add dropcap class to first paragraph only if the No_upchar flag is NOT present
         const firstP = postBody.querySelector('p');
         if (firstP) {
-          firstP.classList.add('dropcap');
+          if (hasNoUpChar) {
+            // Lowercase the first alphabetical character in the first paragraph while preserving HTML structure
+            const walker = document.createTreeWalker(firstP, NodeFilter.SHOW_TEXT, {
+              acceptNode: node => (node.nodeValue && node.nodeValue.trim()) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
+            });
+            const textNode = walker.nextNode();
+            if (textNode) {
+              textNode.nodeValue = textNode.nodeValue.replace(/^\s*([A-Za-z])/, (m, c) => m.replace(c, c.toLowerCase()));
+            }
+            // Mark the body so CSS dropcap rules opt-out
+            postBody.classList.add('no-upchar');
+          } else {
+            firstP.classList.add('dropcap');
+          }
         }
         // Enable image zoom for all images
         enableImageZoom();
