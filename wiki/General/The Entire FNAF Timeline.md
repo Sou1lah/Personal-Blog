@@ -2,7 +2,7 @@
 tags:
   - #youtube
 title: The Entire FNAF Timeline
-youtube_url: https://www.youtube.com/watch?v=RwvCKetYXwI&list=PLikWdJa70b250arJW4USX2Mhky-I8GBw-&index=2
+youtube_url: https://static.wikia.nocookie.net/freddy-fazbears-pizza/images/d/da/FNaF1.jpg/revision/latest/scale-to-width-down/1200?cb=20230410020858
 channel_name: FuhNaff
 subscribers: 647000
 length: 1:00:02
