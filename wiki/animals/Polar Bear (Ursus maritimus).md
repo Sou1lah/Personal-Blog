@@ -23,7 +23,7 @@ banner: https://i.natgeofe.com/k/e444dfeb-d4cd-4bc5-8f8d-003883039447/Fur_Polar-
   </div>
   <div class="column-spacer"></div>
   <div class="column-right">
-	<img src="polartree.jpg" width="300" alt="Arctic Habitat">
+	<img src="../assets/polartree.jpg" width="300" alt="Arctic Habitat">
   </div>
 </div>
 
@@ -37,13 +37,13 @@ banner: https://i.natgeofe.com/k/e444dfeb-d4cd-4bc5-8f8d-003883039447/Fur_Polar-
   </div>
   <div class="column-spacer"></div>
   <div class="column-right">
-    <img src="polar hair.jpg" width="500" height="500" alt="Polar Bear Size Comparison">
+    <img src="../assets/polarhair.jpg" width="500" height="500" alt="Polar Bear Size Comparison">
   </div>
 </div>
 
 <div class="responsive-columns">
   <div class="column-left">
-    <img src="polarclaws.jpg" alt="Polar Bear Claws">
+    <img src="../assets/ polarclaws.jpg" alt="Polar Bear Claws">
   </div>
   <div class="column-spacer"></div>
   <div class="column-right">
@@ -61,7 +61,7 @@ banner: https://i.natgeofe.com/k/e444dfeb-d4cd-4bc5-8f8d-003883039447/Fur_Polar-
   </div>
   <div class="column-spacer"></div>
   <div class="column-right">
-    <img src="polarbones.jpg" alt="Polar Bear Skull">
+    <img src="../assets/polarbones.jpg" alt="Polar Bear Skull">
   </div>
 </div>
 
@@ -83,7 +83,7 @@ banner: https://i.natgeofe.com/k/e444dfeb-d4cd-4bc5-8f8d-003883039447/Fur_Polar-
 
 <div class="responsive-columns">
   <div class="column-left">
-    <img src="polarbearden.jpg" alt="Polar Bear Fur">
+    <img src="../assets/polarbearden.jpg" alt="Polar Bear Fur">
   </div>
   <div class="column-spacer"></div>
   <div class="column-right">

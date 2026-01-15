@@ -3,19 +3,25 @@ const filterBtn = document.querySelector('.filter-btn');
 const filterModal = document.getElementById('filterModal');
 const closeFilterBtn = document.querySelector('.close-filter-btn');
 
-filterBtn.addEventListener('click', () => {
-  filterModal.classList.add('active');
-});
+if (filterBtn && filterModal) {
+  filterBtn.addEventListener('click', () => {
+    filterModal.classList.add('active');
+  });
+}
 
-closeFilterBtn.addEventListener('click', () => {
-  filterModal.classList.remove('active');
-});
-
-filterModal.addEventListener('click', (e) => {
-  if (e.target === filterModal) {
+if (closeFilterBtn && filterModal) {
+  closeFilterBtn.addEventListener('click', () => {
     filterModal.classList.remove('active');
-  }
-});
+  });
+}
+
+if (filterModal) {
+  filterModal.addEventListener('click', (e) => {
+    if (e.target === filterModal) {
+      filterModal.classList.remove('active');
+    }
+  });
+}
 
 // Handle genre filter changes
 const genreFilters = document.querySelectorAll('.genre-filter');

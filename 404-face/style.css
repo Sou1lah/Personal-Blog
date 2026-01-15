@@ -1,0 +1,204 @@
+/* Import Milker font */
+@import url('https://fonts.cdnfonts.com/css/milker');
+
+* {
+  border: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --hue: 223;
+  --sat: 10%;
+  --light: hsl(var(--hue), var(--sat), 95%);
+  --dark: hsl(var(--hue), var(--sat), 5%);
+  --trans-dur: 0.3s;
+  color-scheme: light dark;
+  font-size: clamp(1rem, 0.95rem + 0.25vw, 1.25rem);
+}
+
+body {
+  background-color: var(--light);
+  color: var(--dark);
+  font: 1em / 1.5 sans-serif;
+  display: grid;
+  place-items: center;
+  height: 100vh;
+  transition:
+    background-color var(--trans-dur),
+    color var(--trans-dur);
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: var(--dark);
+    color: var(--light);
+  }
+}
+
+main {
+  padding: 1.5em 0;
+  text-align: center;
+}
+
+.face {
+  display: block;
+  width: 12em;
+  height: auto;
+  margin: 0 auto;
+}
+
+/* Main 404 to face transformation - SLOWER (15 seconds) */
+.face__eyes {
+  animation: faceTransform 15s infinite cubic-bezier(0.65, 0, 0.35, 1);
+  animation-delay: 1s;
+}
+
+@keyframes faceTransform {
+  /* Start and hold as 404 */
+  0%, 20% {
+    transform: translateY(112.5px);
+  }
+  
+  /* Transform to face - stays longer */
+  30%, 60% {
+    transform: translateY(15px);
+  }
+  
+  /* Transform back to 404 */
+  70%, 100% {
+    transform: translateY(112.5px);
+  }
+}
+
+/* Eye blinking */
+.face__eye-lid {
+  animation: eyeBlink 4s 2s infinite;
+}
+
+@keyframes eyeBlink {
+  0%, 40%, 45%, 100% {
+    transform: translateY(0);
+  }
+  42.5% {
+    transform: translateY(17.5px);
+  }
+}
+
+/* Pupil movement - slow with 3 second pauses */
+.face__pupil {
+  animation: pupilMove 6s infinite ease-in-out;
+}
+
+@keyframes pupilMove {
+  0%, 16.6% {
+    stroke-dashoffset: 0;
+    transform: translate(-35px, 0); /* Look left - hold for 1s */
+  }
+  33.3% {
+    stroke-dashoffset: 0;
+    transform: translate(0, 0); /* Look center */
+  }
+  50%, 66.6% {
+    stroke-dashoffset: 0;
+    transform: translate(0, 0); /* Look center - hold for 1s */
+  }
+  83.3% {
+    stroke-dashoffset: 0;
+    transform: translate(-35px, 0); /* Look left */
+  }
+  100% {
+    stroke-dashoffset: 0;
+    transform: translate(-35px, 0); /* Look left - hold for 1s */
+  }
+}
+
+/* Mouth animation - updated to 15 seconds */
+.face__mouth-left,
+.face__mouth-right {
+  animation: mouthAppear 15s infinite;
+}
+
+@keyframes mouthAppear {
+  0%, 20% {
+    stroke-dashoffset: 102;
+  }
+  30%, 60% {
+    stroke-dashoffset: 0;
+  }
+  70%, 100% {
+    stroke-dashoffset: 102;
+  }
+}
+
+/* Nose animation - updated to 15 seconds */
+.face__nose {
+  animation: noseMove 15s infinite cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@keyframes noseMove {
+  0%, 20% {
+    transform: translateY(0);
+  }
+  30%, 60% {
+    transform: translateY(22.5px);
+  }
+  70%, 100% {
+    transform: translateY(0);
+  }
+}
+
+/* Message Container */
+.message-container {
+  text-align: center;
+  margin-top: 2.5rem;
+  font-family: 'Milker', sans-serif;
+}
+
+.message {
+  font-size: 1.5rem;
+  font-weight: normal;
+  color: #000;
+  margin-bottom: 1rem;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.status-indicator {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #4CAF50;
+  animation: blink 1.5s infinite;
+  flex-shrink: 0;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .message {
+    color: #fff;
+  }
+}
+
+@keyframes blink {
+  0%, 100% { 
+    opacity: 1;
+    box-shadow: 0 0 10px #4CAF50;
+  }
+  50% { 
+    opacity: 0.5;
+    box-shadow: 0 0 5px #4CAF50;
+  }
+}
+
+/* Fallback font */
+@font-face {
+  font-family: 'Milker';
+  src: local('Arial'), local('Helvetica');
+  font-weight: normal;
+}

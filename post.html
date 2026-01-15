@@ -199,18 +199,50 @@
         }
         
         // Parse and render markdown
+        // Convert wiki image syntax ![[img.jpg]] to standard markdown image syntax so marked generates <img>
+        content = content.replace(/\!\[\[([^\]]+)\]\]/g, '![]($1)');
+
         const html = marked.parse(content);
-        
+
+        // Resolve relative image paths to GitHub raw URLs so images load when viewing notes
+        const container = document.createElement('div');
+        container.innerHTML = html;
+        const imgs = container.querySelectorAll('img');
+        const baseDirUrl = `${GITHUB_RAW}/${path.split('/').slice(0, -1).map(encodeURIComponent).join('/')}/`;
+        imgs.forEach(img => {
+          try {
+            let src = img.getAttribute('src') || '';
+            if (!src) return;
+            // If already absolute, skip unless it's a /wiki/ path
+            if (src.startsWith('http') || src.startsWith('data:') || src.startsWith('//')) return;
+            let resolved = src;
+            if (src.startsWith('/wiki/')) {
+              const rel = src.replace(/^\/wiki\//, '');
+              resolved = `${GITHUB_RAW}/${rel.split('/').map(encodeURIComponent).join('/')}`;
+            } else {
+              // encode each path segment before resolving to support spaces
+              const encodedSrc = src.split('/').map(encodeURIComponent).join('/');
+              resolved = new URL(encodedSrc, baseDirUrl).toString();
+            }
+            console.log('Rewriting image src:', src, '→', resolved);
+            img.setAttribute('src', resolved);
+            img.style.maxWidth = '100%';
+            img.style.height = 'auto';
+          } catch (e) {
+            console.warn('Failed to rewrite image src for', img, e);
+          }
+        });
+
         // Extract title from filename
         const filename = path.split('/').pop().replace('.md', '').replace(/_/g, ' ');
-        
+
         document.title = filename + " - My Notes";
         document.getElementById('postTitle').textContent = filename;
         document.getElementById('postDate').textContent = "Note";
-        
+
         // Display as formatted markdown HTML
         const postBody = document.getElementById('postContent');
-        postBody.innerHTML = html;
+        postBody.innerHTML = container.innerHTML;
         postBody.style.whiteSpace = 'normal';
         postBody.style.padding = '40px 40px 40px 40px';
       } catch (error) {

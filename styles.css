@@ -166,6 +166,33 @@ body::-webkit-scrollbar {
 .card-date { text-align: right; font-size: 0.75rem; color: rgba(36,34,27,0.6); letter-spacing: 0.5px; }
 .card-title { font-size: 1rem; font-weight:900; padding: 0 18px; margin-top: 6px; }
 .card-excerpt { color: rgba(36,34,27,0.8); font-size: .95rem; flex:1; padding: 0 18px; }
+  /* Drop-cap (first-letter) styling for card content and titles */
+  .card-excerpt::first-letter {
+    font-size: 2.2rem;
+    font-weight: 700;
+    float: left;
+    line-height: 1;
+    padding-right: 8px;
+    padding-top: 4px;
+  }
+
+  .card-title::first-letter {
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1;
+    padding-right: 8px;
+    padding-top: 2px;
+  }
+
+  /* Apply same drop-cap behavior to wiki card content (first paragraph) */
+  .wiki-card-content p:first-child::first-letter {
+    font-size: 2.2rem;
+    font-weight: 700;
+    float: left;
+    line-height: 1;
+    padding-right: 8px;
+    padding-top: 4px;
+  }
 .btn { display:inline-block; border-radius:50px; background: var(--brown); color: var(--cream); text-decoration:none; padding:6px 12px; font-weight:700; letter-spacing:1px; align-self:flex-end; margin: 0 12px 12px 0; font-size: 14px; }
 .btn:hover { background: var(--cream); color: var(--brown); border:3px solid var(--brown); }
 
@@ -188,6 +215,17 @@ body::-webkit-scrollbar {
   .card-title { font-size: 1.2rem; font-weight:900; padding: 0 14px; margin-top: 10px; }
   .card-excerpt { font-size: 0.88rem; padding: 0 14px; }
   .btn { padding: 10px 16px; font-size: 18px; margin: 8px 14px 14px 0; }
+
+  /* Smaller drop-cap on narrow screens to keep layout tidy */
+  .card-excerpt::first-letter,
+  .wiki-card-content p:first-child::first-letter {
+    font-size: 1.6rem;
+    padding-right: 6px;
+    padding-top: 2px;
+  }
+  .card-title::first-letter {
+    font-size: 1.2rem;
+  }
 }
 
 /* Mobile Gears - Desktop Hidden */

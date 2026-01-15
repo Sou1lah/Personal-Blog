@@ -12,7 +12,9 @@
   <header class="site-header">
     <h1 class="site-title">My Blog</h1>
     <div style="display: flex; gap: 10px; align-items: center;">
-      <button id="reloadBtn" style="padding: 8px 16px; background: var(--brown); color: var(--cream); border: 3px solid var(--brown); border-radius: 50px; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s ease; font-family: 'IBM Plex Mono', monospace;" aria-label="Toggle Notes">Notes</button>
+      <button id="reloadBtn" style="width:40px; height:40px; padding:0; background: var(--brown); color: var(--cream); border: 3px solid var(--brown); border-radius: 50%; font-weight: 700; font-size: 16px; cursor: pointer; transition: transform 0.6s ease; font-family: 'IBM Plex Mono', monospace; display: inline-flex; align-items: center; justify-content: center;" aria-label="Reload notes" title="Reload notes">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0114.13-3.36L23 10"></path><path d="M20.49 15a9 9 0 01-14.13 3.36L1 14"></path></svg>
+      </button>
       <a class="github-link" href="https://github.com/Sou1lah" target="_blank" rel="noopener noreferrer" aria-label="View GitHub profile">
         <svg width="28" height="28" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
           <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82A7.6 7.6 0 018 4.6c.68.003 1.36.092 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
@@ -56,17 +58,14 @@
     loadNotesContent();
 
     reloadBtn.addEventListener('click', async () => {
-      isNotesMode = !isNotesMode;
-      
-      if (isNotesMode) {
-        blogSection.style.display = 'none';
-        notesSection.style.display = 'block';
-        reloadBtn.textContent = 'Blog';
+      // Reload notes from wiki
+      try {
+        reloadBtn.disabled = true;
+        reloadBtn.style.transform = 'rotate(360deg)';
         await loadNotesContent();
-      } else {
-        blogSection.style.display = 'block';
-        notesSection.style.display = 'none';
-        reloadBtn.textContent = 'Notes';
+      } finally {
+        reloadBtn.style.transform = '';
+        reloadBtn.disabled = false;
       }
     });
 
@@ -74,37 +73,135 @@
       notesCardsContainer.innerHTML = '<p style="text-align: center; padding: 40px; font-size: 1.1rem; color: rgba(36, 34, 27, 0.7);">Loading notes...</p>';
       
       try {
-        const response = await fetch(GITHUB_API, {
-          headers: { 'Accept': 'application/vnd.github.v3+json' }
-        });
+        let files = null;
+        try {
+          const response = await fetch(GITHUB_API, {
+            headers: { 'Accept': 'application/vnd.github.v3+json' }
+          });
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch notes`);
-        }
+          if (!response.ok) throw new Error('Failed to fetch notes');
+          files = await response.json();
+        } catch (githubErr) {
+          console.warn('GitHub API failed, attempting local /wiki fallback:', githubErr);
+          // Try to read the local /wiki/ directory listing (served by local dev server)
+          try {
+            const localResp = await fetch('/wiki/');
+            if (!localResp.ok) throw new Error('Local /wiki/ not accessible');
+            const html = await localResp.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            let anchors = Array.from(doc.querySelectorAll('a'))
+              .map(a => a.getAttribute('href'))
+              .filter(h => h && h.endsWith('.md'));
 
-        const files = await response.json();
-        const categories = {};
-
-        for (const item of files) {
-          if (item.type === 'dir') {
-            const subResponse = await fetch(`${GITHUB_API}/${item.name}`, {
-              headers: { 'Accept': 'application/vnd.github.v3+json' }
-            });
-            if (subResponse.ok) {
-              const subFiles = await subResponse.json();
-              categories[item.name] = subFiles.filter(f => f.name.endsWith('.md'));
+            // If no anchors found, try common subdirectories (useful for local servers that serve folder listings per-subdir)
+            if (anchors.length === 0) {
+              console.warn('No markdown links found at /wiki/, trying common subdirectories...');
+              const commonDirs = ['animals', 'Mythical'];
+              for (const dir of commonDirs) {
+                try {
+                  const subResp = await fetch(`/wiki/${dir}/`);
+                  if (!subResp.ok) continue;
+                  const subHtml = await subResp.text();
+                  const subDoc = parser.parseFromString(subHtml, 'text/html');
+                  const subAnchors = Array.from(subDoc.querySelectorAll('a'))
+                    .map(a => a.getAttribute('href'))
+                    .filter(h => h && h.endsWith('.md'))
+                    .map(h => (h.startsWith('/') ? h.replace(/^\//, '') : `${dir}/${h}`));
+                  if (subAnchors.length) anchors = anchors.concat(subAnchors);
+                } catch (e) {
+                  console.warn('Failed to fetch subdir /wiki/' + dir + '/', e);
+                }
+              }
             }
-          } else if (item.name.endsWith('.md')) {
-            if (!categories['Root']) categories['Root'] = [];
-            categories['Root'].push(item);
+
+            console.log('Local anchors:', anchors);
+
+            // Normalize and build categories directly from anchors to avoid GitHub API structure
+            const localCategories = {};
+            anchors.forEach(href => {
+              let cleaned = decodeURIComponent(href).replace(/^\/?/, '').trim().replace(/\s+\.md$/, '.md');
+              // Remove a leading 'wiki/' segment if present (links may include it)
+              if (cleaned.toLowerCase().startsWith('wiki/')) cleaned = cleaned.replace(/^wiki\//i, '');
+              const parts = cleaned.split('/');
+              if (parts.length === 1) {
+                if (!localCategories['Root']) localCategories['Root'] = [];
+                localCategories['Root'].push({ name: parts[0], path: cleaned, download_url: `/wiki/${cleaned}` });
+              } else {
+                const dir = parts[0];
+                const filename = parts.slice(1).join('/');
+                if (!localCategories[dir]) localCategories[dir] = [];
+                localCategories[dir].push({ name: filename, path: cleaned, download_url: `/wiki/${cleaned}` });
+              }
+            });
+
+            console.log('Built localCategories:', localCategories);
+            // assign categories directly and flag to skip GitHub parsing
+            files = null; // signal that we used local categories
+            var usedLocalCategories = true;
+            var categoriesFromLocal = localCategories;
+
+            // If we didn't use local categories, turn files array into a pseudo-API structure
+            if (typeof usedLocalCategories === 'undefined' || !usedLocalCategories) {
+              const grouped = {};
+              for (const f of files) {
+                const parts = f.path.split('/');
+                if (parts.length === 1) {
+                  if (!grouped['Root']) grouped['Root'] = [];
+                  grouped['Root'].push({ name: f.name, path: f.path, download_url: f.url });
+                } else {
+                  const dir = parts[0];
+                  if (!grouped[dir]) grouped[dir] = [];
+                  grouped[dir].push({ name: parts.slice(1).join('/'), path: f.path, download_url: f.url });
+                }
+              }
+
+              // Convert grouped back to a files-like array for the rest of the code path
+              const pseudoFiles = [];
+              for (const [dir, items] of Object.entries(grouped)) {
+                if (dir === 'Root') {
+                  for (const it of items) pseudoFiles.push({ name: it.name, download_url: it.url });
+                } else {
+                  pseudoFiles.push({ name: dir, type: 'dir', _localFiles: items });
+                }
+              }
+
+              // Replace files with this pseudo structure
+              files = pseudoFiles;
+            } else {
+              // we already built categoriesFromLocal earlier and will use it directly
+            }
+          } catch (localErr) {
+            console.error('Local /wiki fallback failed:', localErr);
+            throw githubErr; // rethrow original GitHub error to be handled below
+          }
+        }
+        let categories = {};
+
+        if (typeof usedLocalCategories !== 'undefined' && usedLocalCategories) {
+          categories = categoriesFromLocal;
+        } else {
+          for (const item of files) {
+            if (item.type === 'dir') {
+              const subResponse = await fetch(`${GITHUB_API}/${item.name}`, {
+                headers: { 'Accept': 'application/vnd.github.v3+json' }
+              });
+              if (subResponse.ok) {
+                const subFiles = await subResponse.json();
+                categories[item.name] = subFiles.filter(f => f.name.endsWith('.md'));
+              }
+            } else if (item.name.endsWith('.md')) {
+              if (!categories['Root']) categories['Root'] = [];
+              categories['Root'].push(item);
+            }
           }
         }
 
         const totalFiles = Object.values(categories).reduce((sum, arr) => sum + arr.length, 0);
         if (totalFiles === 0) {
           notesCardsContainer.innerHTML = `
-            <div style="text-align: center; padding: 60px 20px;">
-              <p style="font-size: 1.1rem; color: rgba(36, 34, 27, 0.7); margin-bottom: 20px;">No notes found in wiki/ folder</p>
+            <div style="min-height: calc(50vh); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:20px; padding: 20px; width:100%; text-align:center;">
+              <p style="font-size: 1.4rem; color: rgba(36, 34, 27, 0.9); margin: 0;">No notes found in wiki/ folder</p>
               <button onclick="location.reload()" style="padding: 10px 20px; background: var(--brown); color: var(--cream); border: 3px solid var(--brown); border-radius: 50px; font-weight: 700; font-size: 14px; cursor: pointer; font-family: 'IBM Plex Mono', monospace; transition: all 0.2s ease;">Try Again</button>
             </div>
           `;
@@ -118,13 +215,20 @@
           for (const file of items) {
             const title = file.name.replace('.md', '').replace(/_/g, ' ');
             const path = category === 'Root' ? `wiki/${file.name}` : `wiki/${category}/${file.name}`;
-            const rawUrl = `${GITHUB_RAW}/${path}`;
+            // Encode each path segment to handle spaces and special characters
+            let rawUrl;
+            if (typeof usedLocalCategories !== 'undefined' && usedLocalCategories) {
+              rawUrl = `/${path.split('/').map(encodeURIComponent).join('/')}`; // local path on dev server
+            } else {
+              rawUrl = `${GITHUB_RAW}/${path.split('/').map(encodeURIComponent).join('/')}`; // GitHub raw
+            }
+            console.log('Raw note URL:', rawUrl);
 
             html += `
-              <article class="card" style="display: flex; flex-direction: column;">
+              <article class="card" style="display: flex; flex-direction: column; min-height: 260px;">
                 <div class="note-banner" data-raw-url="${rawUrl}" style="width: 100%; height: 140px; background-color: #d4c5b9; background-size: cover; background-position: center; background-repeat: no-repeat; border-radius: 10px 10px 0 0;"></div>
                 <h3 class="card-title" style="margin-top: 12px;">${title}</h3>
-                <div class="note-content" data-raw-url="${rawUrl}" style="flex: 1; font-size: 0.85rem; line-height: 1.5; color: var(--brown); max-height: 200px; overflow: hidden; border-top: 2px solid rgba(36, 34, 27, 0.1); padding-top: 12px; margin-top: 12px;"></div>
+                <div style="flex: 1;"></div>
                 <a href="post.html?note=${encodeURIComponent(path)}" class="btn" style="margin-top: 12px; align-self: flex-end;">Read</a>
               </article>
             `;
@@ -134,58 +238,99 @@
         notesCardsContainer.innerHTML = html;
 
         const bannerElements = notesCardsContainer.querySelectorAll('.note-banner');
-        const contentElements = notesCardsContainer.querySelectorAll('.note-content');
-        
-        for (let i = 0; i < contentElements.length; i++) {
-          const element = contentElements[i];
+
+        // For card thumbnails we only need to set banners; skip content previews
+        for (let i = 0; i < bannerElements.length; i++) {
           const bannerElement = bannerElements[i];
-          const rawUrl = element.getAttribute('data-raw-url');
-          try {
-            const response = await fetch(rawUrl);
-            if (response.ok) {
-              const markdown = await response.text();
-              
-              // Extract frontmatter for banner
-              const frontmatterRegex = /^---\n([\s\S]*?)\n---\n/;
-              const match = markdown.match(frontmatterRegex);
-              let content = markdown;
-              
-              if (match) {
-                const frontmatter = match[1];
-                const bannerMatch = frontmatter.match(/banner:\s*(.+)/);
+          const rawUrl = bannerElement.getAttribute('data-raw-url');
+          console.log('Loading banner for card', i, rawUrl);
+
+          // First, try the exact GitHub raw path like post.html does
+          // derive the path (strip leading / or wiki/)
+          let notePath = rawUrl.replace(/^\//, '').replace(/^wiki\//, '');
+          // if rawUrl was already a full GitHub raw, try to extract the path after /wiki/
+          if (rawUrl.startsWith('http')) {
+            const idx = rawUrl.indexOf('/wiki/');
+            if (idx !== -1) notePath = rawUrl.slice(idx + 6);
+          }
+          const encodedNotePath = notePath.split('/').map(encodeURIComponent).join('/');
+          const githubRawCandidate = `${GITHUB_RAW}/${encodedNotePath}`;
+
+          const urls = [githubRawCandidate, rawUrl];
+          try { const dec = decodeURIComponent(rawUrl); if (dec && dec !== rawUrl && !urls.includes(dec)) urls.push(dec); } catch(e) {}
+          if (!rawUrl.startsWith('/')) urls.push('/' + rawUrl);
+
+          console.log('Banner URL candidates:', urls);
+          let found = false;
+          for (const u of urls) {
+            console.log('Trying banner URL:', u);
+            try {
+              const r = await fetch(u);
+              if (!r.ok) { console.warn('Banner fetch failed for', u, r.status); continue; }
+              const md = await r.text();
+              console.log('Fetched content (first 200 chars):', md.slice(0,200).replace(/\n/g,'\\n'));
+
+              // Extract frontmatter banner
+              const fm = md.match(/^---\n([\s\S]*?)\n---\n/);
+              if (fm) {
+                const bannerMatch = fm[1].match(/banner:\s*(.+)/);
                 if (bannerMatch) {
-                  const bannerUrl = bannerMatch[1].trim().replace(/['"]/g, '');
-                  console.log('Setting banner:', bannerUrl);
-                  bannerElement.style.backgroundImage = `url("${bannerUrl}")`;
-                  bannerElement.style.backgroundColor = 'transparent';
+                  let bannerUrl = bannerMatch[1].trim();
+                  // remove surrounding quotes if present
+                  bannerUrl = bannerUrl.replace(/^['\"]|['\"]$/g, '');
+                  console.log('Found banner URL in frontmatter:', bannerUrl);
+
+                  // If banner URL is relative (starts with /wiki/), convert to raw github url
+                  if (bannerUrl.startsWith('/wiki/')) {
+                    bannerUrl = bannerUrl.replace('/wiki/', `${GITHUB_RAW}/`);
+                  }
+
+                  // Verify image loads before applying as background to avoid broken covers
+                  const img = new Image();
+                  img.onload = () => {
+                    bannerElement.style.backgroundImage = `url('${bannerUrl}')`;
+                    bannerElement.style.backgroundColor = 'transparent';
+                    bannerElement.style.backgroundSize = 'cover';
+                    bannerElement.style.backgroundPosition = 'center';
+                    bannerElement.style.backgroundRepeat = 'no-repeat';
+                  };
+                  img.onerror = () => {
+                    console.warn('Banner image failed to load, using placeholder:', bannerUrl);
+                    bannerElement.style.backgroundImage = `url("https://raw.githubusercontent.com/Sou1lah/Personal-Blog/main/assets/ImagePlaceholder.jpg")`;
+                    bannerElement.style.backgroundColor = '#e8e8e8';
+                    bannerElement.style.backgroundSize = 'cover';
+                    bannerElement.style.backgroundPosition = 'center';
+                    bannerElement.style.backgroundRepeat = 'no-repeat';
+                  };
+                  img.src = bannerUrl;
+
+                  found = true;
+                  break;
                 } else {
-                  // Placeholder if no banner found - use gradient
-                  bannerElement.style.backgroundImage = 'linear-gradient(135deg, #d4c5b9 0%, #a89f99 100%)';
-                  bannerElement.style.backgroundColor = '#d4c5b9';
+                  console.log('Frontmatter present but no banner key for', u);
                 }
-                content = markdown.replace(frontmatterRegex, '');
               } else {
-                // Placeholder if no frontmatter found
-                bannerElement.style.backgroundImage = 'linear-gradient(135deg, #d4c5b9 0%, #a89f99 100%)';
-                bannerElement.style.backgroundColor = '#d4c5b9';
+                console.log('No frontmatter found for', u);
               }
-              
-              const html = marked.parse(content);
-              const tempDiv = document.createElement('div');
-              tempDiv.innerHTML = html;
-              const textContent = tempDiv.textContent || tempDiv.innerText;
-              element.textContent = textContent.substring(0, 300) + (textContent.length > 300 ? '...' : '');
+            } catch (e) {
+              console.warn('Error fetching banner url', u, e);
             }
-          } catch (error) {
-            console.error('Error loading content:', error);
-            element.textContent = 'Error loading content';
+          }
+
+          if (!found) {
+            // placeholder
+            bannerElement.style.backgroundImage = `url("https://raw.githubusercontent.com/Sou1lah/Personal-Blog/main/assets/ImagePlaceholder.jpg")`;
+            bannerElement.style.backgroundColor = '#e8e8e8';
+            bannerElement.style.backgroundSize = 'cover';
+            bannerElement.style.backgroundPosition = 'center';
+            bannerElement.style.backgroundRepeat = 'no-repeat';
           }
         }
       } catch (error) {
         console.error('Error fetching notes:', error);
         notesCardsContainer.innerHTML = `
-          <div style="text-align: center; padding: 60px 20px;">
-            <p style="font-size: 1.1rem; color: red; margin-bottom: 20px;">Error loading notes</p>
+          <div style="min-height: calc(50vh); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:20px; padding: 20px; width:100%; text-align:center;">
+            <p style="font-size: 1.4rem; color: red; margin: 0;">Error loading notes</p>
             <button onclick="location.reload()" style="padding: 10px 20px; background: var(--brown); color: var(--cream); border: 3px solid var(--brown); border-radius: 50px; font-weight: 700; font-size: 14px; cursor: pointer; font-family: 'IBM Plex Mono', monospace; transition: all 0.2s ease;">Try Again</button>
           </div>
         `;
