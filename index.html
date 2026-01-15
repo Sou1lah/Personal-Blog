@@ -246,82 +246,35 @@
         for (let i = 0; i < bannerElements.length; i++) {
           const bannerElement = bannerElements[i];
           const rawUrl = bannerElement.getAttribute('data-raw-url');
-          console.log('Loading banner for card', i, rawUrl);
-
-          // First, try the exact GitHub raw path like post.html does
-          // derive the path (strip leading / or wiki/)
-          let notePath = rawUrl.replace(/^\//, '').replace(/^wiki\//, '');
-          // if rawUrl was already a full GitHub raw, try to extract the path after /wiki/
-          if (rawUrl.startsWith('http')) {
-            const idx = rawUrl.indexOf('/wiki/');
-            if (idx !== -1) notePath = rawUrl.slice(idx + 6);
-          }
-          const encodedNotePath = notePath.split('/').map(encodeURIComponent).join('/');
-          const githubRawCandidate = `${GITHUB_RAW}/${encodedNotePath}`;
-
-          const urls = [githubRawCandidate, rawUrl];
-          try { const dec = decodeURIComponent(rawUrl); if (dec && dec !== rawUrl && !urls.includes(dec)) urls.push(dec); } catch(e) {}
-          if (!rawUrl.startsWith('/')) urls.push('/' + rawUrl);
-
-          console.log('Banner URL candidates:', urls);
-          let found = false;
-          for (const u of urls) {
-            console.log('Trying banner URL:', u);
-            try {
-              const r = await fetch(u);
-              if (!r.ok) { console.warn('Banner fetch failed for', u, r.status); continue; }
-              const md = await r.text();
-              console.log('Fetched content (first 200 chars):', md.slice(0,200).replace(/\n/g,'\\n'));
-
-              // Extract frontmatter banner
-              const fm = md.match(/^---\n([\s\S]*?)\n---\n/);
-              if (fm) {
-                const bannerMatch = fm[1].match(/banner:\s*(.+)/);
-                if (bannerMatch) {
-                  let bannerUrl = bannerMatch[1].trim();
-                  // remove surrounding quotes if present
-                  bannerUrl = bannerUrl.replace(/^['\"]|['\"]$/g, '');
-                  console.log('Found banner URL in frontmatter:', bannerUrl);
-
-                  // If banner URL is relative (starts with /wiki/), convert to raw github url
-                  if (bannerUrl.startsWith('/wiki/')) {
-                    bannerUrl = bannerUrl.replace('/wiki/', `${GITHUB_RAW}/`);
-                  }
-
-                  // Verify image loads before applying as background to avoid broken covers
-                  const img = new Image();
-                  img.onload = () => {
-                    bannerElement.style.backgroundImage = `url('${bannerUrl}')`;
-                    bannerElement.style.backgroundColor = 'transparent';
-                    bannerElement.style.backgroundSize = 'cover';
-                    bannerElement.style.backgroundPosition = 'center';
-                    bannerElement.style.backgroundRepeat = 'no-repeat';
-                  };
-                  img.onerror = () => {
-                    console.warn('Banner image failed to load, using placeholder:', bannerUrl);
-                    bannerElement.style.backgroundImage = `url("https://raw.githubusercontent.com/Sou1lah/Personal-Blog/main/assets/ImagePlaceholder.jpg")`;
-                    bannerElement.style.backgroundColor = '#e8e8e8';
-                    bannerElement.style.backgroundSize = 'cover';
-                    bannerElement.style.backgroundPosition = 'center';
-                    bannerElement.style.backgroundRepeat = 'no-repeat';
-                  };
-                  img.src = bannerUrl;
-
-                  found = true;
-                  break;
-                } else {
-                  console.log('Frontmatter present but no banner key for', u);
+          try {
+            const r = await fetch(rawUrl);
+            if (!r.ok) throw new Error('Failed to fetch markdown');
+            const md = await r.text();
+            const fm = md.match(/^---\n([\s\S]*?)\n---\n/);
+            let bannerUrl = null;
+            if (fm) {
+              const bannerMatch = fm[1].match(/banner:\s*(.+)/);
+              if (bannerMatch) {
+                bannerUrl = bannerMatch[1].trim().replace(/^['\"]|['\"]$/g, '');
+                if (bannerUrl.startsWith('/wiki/')) {
+                  bannerUrl = bannerUrl.replace('/wiki/', `${GITHUB_RAW}/`);
                 }
-              } else {
-                console.log('No frontmatter found for', u);
               }
-            } catch (e) {
-              console.warn('Error fetching banner url', u, e);
             }
-          }
-
-          if (!found) {
-            // placeholder
+            if (bannerUrl) {
+              bannerElement.style.backgroundImage = `url('${bannerUrl}')`;
+              bannerElement.style.backgroundColor = 'transparent';
+              bannerElement.style.backgroundSize = 'cover';
+              bannerElement.style.backgroundPosition = 'center';
+              bannerElement.style.backgroundRepeat = 'no-repeat';
+            } else {
+              bannerElement.style.backgroundImage = `url("https://raw.githubusercontent.com/Sou1lah/Personal-Blog/main/assets/ImagePlaceholder.jpg")`;
+              bannerElement.style.backgroundColor = '#e8e8e8';
+              bannerElement.style.backgroundSize = 'cover';
+              bannerElement.style.backgroundPosition = 'center';
+              bannerElement.style.backgroundRepeat = 'no-repeat';
+            }
+          } catch (e) {
             bannerElement.style.backgroundImage = `url("https://raw.githubusercontent.com/Sou1lah/Personal-Blog/main/assets/ImagePlaceholder.jpg")`;
             bannerElement.style.backgroundColor = '#e8e8e8';
             bannerElement.style.backgroundSize = 'cover';

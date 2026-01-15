@@ -1,5 +1,5 @@
 ---
-banner: "![[Assets/image.png]]"
+banner: https://upload.wikimedia.org/wikipedia/commons/e/e5/Bridges_of_Konigsberg.png
 title: Graph theory and its uses with 5 examples of real life problems
 source:
 author:
@@ -24,7 +24,7 @@ In this blog, I will start by discussing the original problem and its clever sol
 
 `Königsberg` (now `Kaliningrad`, Russia) was a city from the old Kingdom of `Prussia` spanning along both sides of the Pregel river. The city had two islands that were connected to the mainland through bridges. The smaller island was connected with two bridges to either side of the river, while the bigger island was connected with only one. Additionally, there was one bridge connecting both islands. You can see the layout of the bridges in the image below.
 
-![](https://upload.wikimedia.org/wikipedia/commons/e/e5/Bridges_of_Konigsberg.png)
+<img src="https://upload.wikimedia.org/wikipedia/commons/e/e5/Bridges_of_Konigsberg.png" alt="Bridges of Königsberg illustration" style="max-width:400px; width:100%; height:auto; display:block; margin:auto;" />
 
 *Image source: [Merian-Erben](https://www.preussen-chronik.de/_/bild_jsp/key=bild_kathe2.html)*
 
@@ -34,19 +34,18 @@ Superficially, the problem sounds simple to solve. Just try some paths and you w
 
 Firstly, he realized that it does not matter how you travel inside the city. The only important part to consider for the problem was the connections between the different landmasses. He drew dots to represent the landmasses and lines connecting these dots to represent the bridges (as seen in the picture below). The location of the dots and the shape of the lines are not relevant for the problem, only their relation. In the end, he had an abstraction of the problem with only dots and lines, which is now called a graph.
 
-![](https://xomnia.com/wp-content/uploads/2025/05/Konigsberg-bridges.png)
+<img src="https://xomnia.com/wp-content/uploads/2025/05/Konigsberg-bridges.png" alt="Konigsberg bridges illustration" style="max-width:300px; width:100%; height:auto; display:block; margin:auto;" />
 
 Second, he thought that in order to walk through a landmass you need to enter through a bridge and exit from a different bridge. This means that the dot representing that landmass needs two lines connecting it to represent the enter and exit line. More generally, the dot can have any even number of lines as connections. This does not necessarily apply for two dots, which are the first and last landmass in the path. Those dots can have an odd number of lines connecting them since you could only exit the first dot and only enter the last dot. From counting the lines connecting each dot of the Königsberg bridge problem, one can see that all of the landmasses have an odd number of connections. This proves that it is impossible to make a path that crosses through all bridges.
 
 Euler changed the way of solving problems. He recognized that the problem was not about measuring and calculating the solution, but about finding the geometry and relations behind it. By abstracting the problem, he started the field of graph theory and his solution became the first theorem of this field. Since then, graph theory has developed not only from a mathematical perspective, but into many other fields such as physics, biology, linguistics, social sciences, computer sciences and more.
 
-[Join the leading data & AI consultancy in the Netherlands. Click here to view our vacancies](https://xomnia.com/careers/)
 
 ### What is graph theory?
 
 Graph theory is the study of relationships between objects. These objects can be represented as dots (like the landmasses above) and their relationships as lines (like the bridges). The dots are called vertices or nodes, and the lines are called edges or links. The connection of all the vertices and edges together is called a graph and can be represented as an image, like the ones below:
 
-![](https://xomnia.com/wp-content/uploads/2025/05/Graphs.png)
+<img src="https://xomnia.com/wp-content/uploads/2025/05/Graphs.png" alt="Graphs illustration" style="max-width:15w0px; width:100%; height:auto; display:block; margin:auto;" />
 
 One of the most important properties of graphs is that they are just abstractions of the real world. This allows the representation of graphs in many different ways, all of which are correct. For example, all the graphs above are visually very different from each other; however, they all represent the same relations, thus all are the same graph. You can check it by counting the number of edges that each vertex has.
 
