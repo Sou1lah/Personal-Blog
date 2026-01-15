@@ -282,8 +282,10 @@
           const themeNames = ['brown','blue','red','green','sky','purple','pink','orange','yellow','teal'];
           const page = document.querySelector('.post-page');
           if (themeNames.includes(noteColor)) {
-            page.setAttribute('data-theme', noteColor);
+            // Apply the named theme to the whole document so body-based theme rules apply
+            document.body.setAttribute('data-theme', noteColor);
             page.style.setProperty('--note-accent', 'var(--accent)');
+            console.log('Post applied theme on body:', noteColor);
           } else if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(noteColor)) {
             page.style.setProperty('--note-accent', noteColor);
             // subtle tint overlay on banner
@@ -301,7 +303,8 @@
               tint.style.opacity = '0.08';
             }
           } else {
-            page.setAttribute('data-theme', noteColor);
+            // Unknown name: apply to body as a theme attempt (will only take effect if CSS theme exists)
+            document.body.setAttribute('data-theme', noteColor);
           }
         }
         
