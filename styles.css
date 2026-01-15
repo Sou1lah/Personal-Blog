@@ -177,7 +177,8 @@ body::-webkit-scrollbar {
   }
 
   /* Apply same drop-cap behavior to wiki card content (first paragraph) */
-  .wiki-card-content p:first-child::first-letter {
+  /* Use direct child selector so paragraphs inside list items (e.g. inside <li>) are NOT targeted */
+  .wiki-card-content > p:first-child::first-letter {
     font-size: 2.2rem;
     font-weight: 700;
     float: left;
@@ -186,8 +187,8 @@ body::-webkit-scrollbar {
     padding-top: 4px;
   }
 
-  /* Drop-cap for post content: only the first paragraph inside .post-body */
-  .post-body p:first-child::first-letter {
+  /* Drop-cap for post content: only the top-level first paragraph inside .post-body */
+  .post-body > p:first-child::first-letter {
     font-size: 3.5rem;
     font-weight: 700;
     float: left;

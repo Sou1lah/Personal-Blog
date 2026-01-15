@@ -226,13 +226,16 @@
             // Synchronously add a placeholder for tags, to be filled after fetch
             const cardId = `card-${category.replace(/[^a-zA-Z0-9]/g, '')}-${file.name.replace(/[^a-zA-Z0-9]/g, '')}`;
             html += `
-              <article class="card" id="${cardId}" style="display: flex; flex-direction: column; min-height: 260px; position: relative;">
+              <article class="card" id="${cardId}" style="display: flex; flex-direction: column; min-height: 260px; position: relative; padding-bottom: 72px;">
                 <div class="note-banner" data-raw-url="${rawUrl}" style="width: 100%; height: 140px; background-color: #d4c5b9; background-size: cover; background-position: center; background-repeat: no-repeat; border-radius: 10px 10px 0 0;"></div>
                 <h3 class="card-title" style="margin-top: 12px;">${title}</h3>
                 <div style="flex: 1;"></div>
-                <div class="note-tags-scroll-wrap" style="position: absolute; left: 16px; right: 110px; bottom: 18px; z-index: 2; pointer-events: auto; max-width: calc(100% - 130px);">
-                  <div class="note-tags" style="display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; padding-bottom: 2px; -webkit-overflow-scrolling: touch; max-width: 100%; position: relative;"></div>
-                  <div class="tags-fade" style="position: absolute; right: 0; top: 0; width: 40px; height: 100%; pointer-events: none; background: linear-gradient(to right, transparent, var(--cream, #f5f0e6) 80%);"></div>
+                <div class="card-footer" style="position: absolute; left: 16px; right: 16px; bottom: 16px; z-index: 2; pointer-events: auto; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                  <div class="note-tags-scroll-wrap" style="flex: 1 1 auto; min-width: 0; max-width: calc(100% - 110px); overflow: hidden; position: relative;">
+                    <div class="note-tags" style="display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; padding-bottom: 2px; -webkit-overflow-scrolling: touch; max-width: 100%; position: relative;"></div>
+                    <div class="tags-fade" style="position: absolute; right: 0; top: 0; width: 40px; height: 100%; pointer-events: none; background: linear-gradient(to right, transparent, rgba(245,240,230,0.6) 95%);"></div>
+                  </div>
+                  <a href="post.html?note=${encodeURIComponent(path)}" class="btn" style="flex: 0 0 auto; padding: 8px 12px; margin: 0;">Read</a>
                 </div>
                 <style>
                   .note-tags::-webkit-scrollbar {
@@ -244,7 +247,6 @@
                   }
                   .tags-fade.hidden { display: none !important; }
                 </style>
-                <a href="post.html?note=${encodeURIComponent(path)}" class="btn" style="margin-top: 12px; align-self: flex-end;">Read</a>
               </article>
             `;
           }
@@ -359,16 +361,49 @@
                 }
                 // Add more social icons here as needed
               };
-              function renderTag(tag) {
-                const lower = tag.toLowerCase();
+              function hexToRgba(hex, alpha) {
+                const h = hex.replace('#','');
+                const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+                const intVal = parseInt(full, 16);
+                const r = (intVal >> 16) & 255;
+                const g = (intVal >> 8) & 255;
+                const b = intVal & 255;
+                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+              }
+
+              // If a note includes a tag named "No_upchar" (case-insensitive, '#' optional),
+              // treat it as a flag: do NOT display the flag tag, and lowercase the first
+              // character of all other displayed tags.
+              const hasNoUpChar = tags.some(t => t.replace(/^#/, '').toLowerCase() === 'no_upchar');
+              const displayTags = tags.filter(t => t.replace(/^#/, '').toLowerCase() !== 'no_upchar');
+
+              function renderTag(tag, noUpChar) {
+                // strip leading # for display and matching
+                const tagStripped = tag.replace(/^#/, '');
+                const lower = tagStripped.toLowerCase();
+                // prepare display text (lowercase first letter if flag is present)
+                const displayText = noUpChar && tagStripped.length ? (tagStripped.charAt(0).toLowerCase() + tagStripped.slice(1)) : tagStripped;
+
                 if (socialIcons[lower]) {
                   const icon = socialIcons[lower];
-                  return `<span style="display:inline-block;background:${icon.bg};color:${icon.color};font-size:0.85em;padding:2px 10px 2px 8px;border-radius:50px;box-shadow:0 1px 4px #0001;white-space:nowrap;vertical-align:middle;gap:4px;">${icon.svg}<span style='margin-left:6px;vertical-align:middle;'>${tag}</span></span>`;
+                  // Use a slightly transparent background for social badges (only affects social tags)
+                  const bg = hexToRgba(icon.bg, 0.12);
+                  // Keep SVG icon colors intact so only the badge background is translucent
+                  const svg = icon.svg;
+                  return `<span style="display:inline-block;background:${bg};color:${icon.color};font-size:0.85em;padding:2px 10px 2px 8px;border-radius:50px;box-shadow:0 1px 4px #0001;white-space:nowrap;vertical-align:middle;gap:4px;">${svg}<span style='margin-left:6px;vertical-align:middle;'>${displayText}</span></span>`;
                 }
-                return `<span style="display:inline-block;background:#f5f5f5;color:#444;font-size:0.85em;padding:2px 10px 2px 10px;border-radius:50px;box-shadow:0 1px 4px #0001;white-space:nowrap;">${tag}</span>`;
+                return `<span style="display:inline-block;background:#f5f5f5;color:#444;font-size:0.85em;padding:2px 10px 2px 10px;border-radius:50px;box-shadow:0 1px 4px #0001;white-space:nowrap;">${displayText}</span>`;
               }
+
               if (tagsDiv) {
-                tagsDiv.innerHTML = tags.map(renderTag).join(' ');
+                tagsDiv.innerHTML = displayTags.map(t => renderTag(t, hasNoUpChar)).join(' ');
+                // If the No_upchar flag is present, lowercase the first letter of the card title as well
+                if (hasNoUpChar) {
+                  const titleEl = card.querySelector('.card-title');
+                  if (titleEl && titleEl.textContent && titleEl.textContent.length) {
+                    titleEl.textContent = titleEl.textContent.charAt(0).toLowerCase() + titleEl.textContent.slice(1);
+                  }
+                }
               }
               // Hide fade at end of scroll
               if (tagsDiv && fadeDiv) {

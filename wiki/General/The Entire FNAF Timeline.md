@@ -1,51 +1,12 @@
 ---
-banner : https://static.wikia.nocookie.net/freddy-fazbears-pizza/images/d/da/FNaF1.jpg/revision/latest/scale-to-width-down/1200?cb=20230410020858
-tags: #youtube
+banner : https://upload.wikimedia.org/wikipedia/commons/1/1e/Five_Nights_at_Freddy%27s.svg
+tags: #youtube #No_upchar
 title: The Entire FNAF Timeline
 youtube_url: https://static.wikia.nocookie.net/freddy-fazbears-pizza/images/d/da/FNaF1.jpg/revision/latest/scale-to-width-down/1200?cb=20230410020858
 channel_name: FuhNaff
 subscribers: 647000
 length: 1:00:02
 publish_date: 2024-12-18
-hashtags:
-  - "#fnaf"
-  - "#fnaf4"
-  - "#fnafmovie"
-  - "#fnaf2"
-  - "#fnaf3"
-  - "#fnaflore"
-  - "#fnaf1"
-  - "#fnaf4remake"
-  - "#fnaffangame"
-  - "#fnafsecuritybreach"
-  - "#hardfnafgame"
-  - "#endingfnafgame"
-  - "#fnafremix"
-  - "#fnaftheory"
-  - "#fnafremake"
-  - "#fnaf6"
-  - "#fnaffangames"
-  - "#fnaf2"
-  - "#fnafvs"
-  - "#fnafgt"
-  - "#fnafGameTheory"
-  - "#fnafVHS"
-  - "#fnafDLC"
-  - "#fnafnews"
-  - "#fnafsong"
-  - "#fnafmeme"
-  - "#fnafruin"
-  - "#fnafcode"
-  - "#fnafplus"
-  - "#fnaffoxy"
-  - "#cancelledfnafgame"
-  - "#fuhnaff"
-  - "#fnaftimeline"
-  - "#fivenightsatfreddystimeline"
-  - "#FuhNaffTimeline"
-  - "#JohnFuhnaff"
-  - "#timeline"
-
 description: |
   "The Entire FNAF Timeline"  
   Hey everyone! In today's video I share my version of the FNAF Timeline! This video has been in the works for a very long time, and I genuinely hope you enjoy it.  
