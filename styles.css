@@ -176,14 +176,6 @@ body::-webkit-scrollbar {
     padding-top: 4px;
   }
 
-  .card-title::first-letter {
-    font-size: 1.8rem;
-    font-weight: 700;
-    line-height: 1;
-    padding-right: 8px;
-    padding-top: 2px;
-  }
-
   /* Apply same drop-cap behavior to wiki card content (first paragraph) */
   .wiki-card-content p:first-child::first-letter {
     font-size: 2.2rem;
@@ -193,6 +185,18 @@ body::-webkit-scrollbar {
     padding-right: 8px;
     padding-top: 4px;
   }
+
+  /* Drop-cap for post content: apply to the first block element inside .post-body (paragraphs/headings/blockquote) */
+  .post-body::first-letter,
+  .post-body :is(p,h1,h2,h3,blockquote):first-child::first-letter {
+    font-size: 3.5rem;
+    font-weight: 700;
+    float: left;
+    line-height: 2.5rem;
+    padding-right: 8px;
+    padding-top: 6px;
+  }
+
 .btn { display:inline-block; border-radius:50px; background: var(--brown); color: var(--cream); text-decoration:none; padding:6px 12px; font-weight:700; letter-spacing:1px; align-self:flex-end; margin: 0 12px 12px 0; font-size: 14px; }
 .btn:hover { background: var(--cream); color: var(--brown); border:3px solid var(--brown); }
 
@@ -218,13 +222,13 @@ body::-webkit-scrollbar {
 
   /* Smaller drop-cap on narrow screens to keep layout tidy */
   .card-excerpt::first-letter,
-  .wiki-card-content p:first-child::first-letter {
+  .wiki-card-content p:first-child::first-letter,
+  .post-body::first-letter,
+  .post-body :is(p,h1,h2,h3,blockquote):first-child::first-letter {
     font-size: 1.6rem;
     padding-right: 6px;
     padding-top: 2px;
-  }
-  .card-title::first-letter {
-    font-size: 1.2rem;
+    line-height: 1.8rem;
   }
 }
 
