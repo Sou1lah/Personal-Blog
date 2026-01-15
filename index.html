@@ -58,13 +58,12 @@
     loadNotesContent();
 
     reloadBtn.addEventListener('click', async () => {
-      // Reload notes from wiki
+      // Reload notes from wiki (force fetch and update cache)
       try {
         reloadBtn.disabled = true;
         reloadBtn.style.transform = 'rotate(360deg)';
-        // Disable theme toggle while fetching to avoid visual flicker or race conditions
         if (window.setThemeToggleEnabled) window.setThemeToggleEnabled(false);
-        await loadNotesContent();
+        await loadNotesContent(true); // force fetch
       } finally {
         reloadBtn.style.transform = '';
         reloadBtn.disabled = false;
@@ -72,133 +71,123 @@
       }
     });
 
-    async function loadNotesContent() {
+    async function loadNotesContent(forceFetch = false) {
       notesCardsContainer.innerHTML = '<p style="text-align: center; padding: 40px; font-size: 1.1rem; color: rgba(36, 34, 27, 0.7);">Loading notes...</p>';
-      
+
       try {
-        let files = null;
-        try {
-          const response = await fetch(GITHUB_API, {
-            headers: { 'Accept': 'application/vnd.github.v3+json' }
-          });
-
-          if (!response.ok) throw new Error('Failed to fetch notes');
-          files = await response.json();
-        } catch (githubErr) {
-          console.warn('GitHub API failed, attempting local /wiki fallback:', githubErr);
-          // Try to read the local /wiki/ directory listing (served by local dev server)
+        // Use localStorage cache unless forceFetch is true
+      let categories = {};
+      if (!forceFetch) {
+        const cached = localStorage.getItem('wikiNotesCache');
+        if (cached) {
           try {
-            const localResp = await fetch('/wiki/');
-            if (!localResp.ok) throw new Error('Local /wiki/ not accessible');
-            const html = await localResp.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            let anchors = Array.from(doc.querySelectorAll('a'))
-              .map(a => a.getAttribute('href'))
-              .filter(h => h && h.endsWith('.md'));
-
-            // If no anchors found, try common subdirectories (useful for local servers that serve folder listings per-subdir)
-            if (anchors.length === 0) {
-              console.warn('No markdown links found at /wiki/, trying common subdirectories...');
-              const commonDirs = ['animals', 'Mythical'];
-              for (const dir of commonDirs) {
-                try {
-                  const subResp = await fetch(`/wiki/${dir}/`);
-                  if (!subResp.ok) continue;
-                  const subHtml = await subResp.text();
-                  const subDoc = parser.parseFromString(subHtml, 'text/html');
-                  const subAnchors = Array.from(subDoc.querySelectorAll('a'))
-                    .map(a => a.getAttribute('href'))
-                    .filter(h => h && h.endsWith('.md'))
-                    .map(h => (h.startsWith('/') ? h.replace(/^\//, '') : `${dir}/${h}`));
-                  if (subAnchors.length) anchors = anchors.concat(subAnchors);
-                } catch (e) {
-                  console.warn('Failed to fetch subdir /wiki/' + dir + '/', e);
-                }
+            categories = JSON.parse(cached);
+          } catch (e) {
+            categories = {};
+          }
+        }
+      }
+      if (Object.keys(categories).length === 0 || forceFetch) {
+        // Helper: recursively fetch all .md files from GitHub API
+        async function fetchAllMarkdownFiles(apiUrl, category = null) {
+          const result = {};
+          const response = await fetch(apiUrl, { headers: { 'Accept': 'application/vnd.github.v3+json' } });
+          if (!response.ok) return result;
+          const items = await response.json();
+          for (const item of items) {
+            if (item.type === 'dir') {
+              const sub = await fetchAllMarkdownFiles(`${apiUrl}/${item.name}`, item.name);
+              for (const [cat, files] of Object.entries(sub)) {
+                if (!result[cat]) result[cat] = [];
+                result[cat] = result[cat].concat(files);
               }
+            } else if (item.name.endsWith('.md')) {
+              const cat = category || 'Root';
+              if (!result[cat]) result[cat] = [];
+              result[cat].push(item);
             }
-
-            console.log('Local anchors:', anchors);
-
-            // Normalize and build categories directly from anchors to avoid GitHub API structure
-            const localCategories = {};
-            anchors.forEach(href => {
+          }
+          return result;
+        }
+        // Helper: recursively fetch all .md files from local server
+        async function fetchAllMarkdownFilesLocal(basePath = '/wiki/', category = null) {
+          const result = {};
+          const resp = await fetch(basePath);
+          if (!resp.ok) return result;
+          const html = await resp.text();
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          const anchors = Array.from(doc.querySelectorAll('a'));
+          for (const a of anchors) {
+            const href = a.getAttribute('href');
+            if (!href || href === '../') continue;
+            if (href.endsWith('.md')) {
               let cleaned = decodeURIComponent(href).replace(/^\/?/, '').trim().replace(/\s+\.md$/, '.md');
-              // Remove a leading 'wiki/' segment if present (links may include it)
               if (cleaned.toLowerCase().startsWith('wiki/')) cleaned = cleaned.replace(/^wiki\//i, '');
               const parts = cleaned.split('/');
+              const cat = category || (parts.length > 1 ? parts[0] : 'Root');
+              if (!result[cat]) result[cat] = [];
+              result[cat].push({ name: parts.slice(-1)[0], path: cleaned, download_url: `/wiki/${cleaned}` });
+            } else if (!href.endsWith('.md') && !href.includes('.')) {
+              // Likely a subdirectory
+              const sub = await fetchAllMarkdownFilesLocal(basePath + href, href.replace(/\/$/, ''));
+              for (const [cat, files] of Object.entries(sub)) {
+                if (!result[cat]) result[cat] = [];
+                result[cat] = result[cat].concat(files);
+              }
+            }
+          }
+          return result;
+        }
+        try {
+          // Try index.json manifest first (local dev or GitHub raw)
+          let indexList = null;
+          try {
+            const idxResp = await fetch('/wiki/index.json');
+            if (idxResp.ok) indexList = await idxResp.json();
+          } catch (e) {}
+          if (!indexList) {
+            try {
+              const ghIdxResp = await fetch(`${GITHUB_RAW}/index.json`);
+              if (ghIdxResp.ok) indexList = await ghIdxResp.json();
+            } catch (e) {}
+          }
+
+          if (indexList && Array.isArray(indexList.files) && indexList.files.length) {
+            const built = {};
+            for (const p of indexList.files) {
+              const cleaned = decodeURIComponent(p).replace(/^\/?/, '').trim();
+              const parts = cleaned.split('/');
               if (parts.length === 1) {
-                if (!localCategories['Root']) localCategories['Root'] = [];
-                localCategories['Root'].push({ name: parts[0], path: cleaned, download_url: `/wiki/${cleaned}` });
+                if (!built['Root']) built['Root'] = [];
+                built['Root'].push({ name: parts[0], path: cleaned, download_url: `/wiki/${cleaned}` });
               } else {
                 const dir = parts[0];
                 const filename = parts.slice(1).join('/');
-                if (!localCategories[dir]) localCategories[dir] = [];
-                localCategories[dir].push({ name: filename, path: cleaned, download_url: `/wiki/${cleaned}` });
+                if (!built[dir]) built[dir] = [];
+                built[dir].push({ name: filename, path: cleaned, download_url: `/wiki/${cleaned}` });
               }
-            });
-
-            console.log('Built localCategories:', localCategories);
-            // assign categories directly and flag to skip GitHub parsing
-            files = null; // signal that we used local categories
-            var usedLocalCategories = true;
-            var categoriesFromLocal = localCategories;
-
-            // If we didn't use local categories, turn files array into a pseudo-API structure
-            if (typeof usedLocalCategories === 'undefined' || !usedLocalCategories) {
-              const grouped = {};
-              for (const f of files) {
-                const parts = f.path.split('/');
-                if (parts.length === 1) {
-                  if (!grouped['Root']) grouped['Root'] = [];
-                  grouped['Root'].push({ name: f.name, path: f.path, download_url: f.url });
-                } else {
-                  const dir = parts[0];
-                  if (!grouped[dir]) grouped[dir] = [];
-                  grouped[dir].push({ name: parts.slice(1).join('/'), path: f.path, download_url: f.url });
-                }
-              }
-
-              // Convert grouped back to a files-like array for the rest of the code path
-              const pseudoFiles = [];
-              for (const [dir, items] of Object.entries(grouped)) {
-                if (dir === 'Root') {
-                  for (const it of items) pseudoFiles.push({ name: it.name, download_url: it.url });
-                } else {
-                  pseudoFiles.push({ name: dir, type: 'dir', _localFiles: items });
-                }
-              }
-
-              // Replace files with this pseudo structure
-              files = pseudoFiles;
-            } else {
-              // we already built categoriesFromLocal earlier and will use it directly
             }
-          } catch (localErr) {
-            console.error('Local /wiki fallback failed:', localErr);
-            throw githubErr; // rethrow original GitHub error to be handled below
-          }
-        }
-        let categories = {};
-
-        if (typeof usedLocalCategories !== 'undefined' && usedLocalCategories) {
-          categories = categoriesFromLocal;
-        } else {
-          for (const item of files) {
-            if (item.type === 'dir') {
-              const subResponse = await fetch(`${GITHUB_API}/${item.name}`, {
-                headers: { 'Accept': 'application/vnd.github.v3+json' }
-              });
-              if (subResponse.ok) {
-                const subFiles = await subResponse.json();
-                categories[item.name] = subFiles.filter(f => f.name.endsWith('.md'));
+            categories = built;
+            try { localStorage.setItem('wikiNotesCache', JSON.stringify(categories)); } catch (e) {}
+          } else {
+            try {
+              categories = await fetchAllMarkdownFiles(GITHUB_API);
+            } catch (githubErr) {
+              console.warn('GitHub API failed, attempting local /wiki fallback:', githubErr);
+              try {
+                categories = await fetchAllMarkdownFilesLocal();
+              } catch (localErr) {
+                console.error('Local /wiki fallback failed:', localErr);
+                throw githubErr;
               }
-            } else if (item.name.endsWith('.md')) {
-              if (!categories['Root']) categories['Root'] = [];
-              categories['Root'].push(item);
             }
+            try { localStorage.setItem('wikiNotesCache', JSON.stringify(categories)); } catch (e) {}
           }
+        } catch (e) {
+          // If all fetching fails, categories remains empty and error will be handled below
         }
+      }
 
         const totalFiles = Object.values(categories).reduce((sum, arr) => sum + arr.length, 0);
         if (totalFiles === 0) {
@@ -222,14 +211,13 @@
             if (path.startsWith('wiki/wiki/')) {
               path = path.replace('wiki/wiki/', 'wiki/');
             }
-            // Encode each path segment to handle spaces and special characters
+            // Use file.download_url if present and starts with / (local), else build GitHub raw URL
             let rawUrl;
-            if (typeof usedLocalCategories !== 'undefined' && usedLocalCategories) {
-              rawUrl = `/${path.split('/').map(encodeURIComponent).join('/')}`; // local path on dev server
+            if (file.download_url && file.download_url.startsWith('/wiki/')) {
+              rawUrl = file.download_url;
             } else {
-              rawUrl = `${GITHUB_RAW}/${path.split('/').map(encodeURIComponent).join('/')}`; // GitHub raw
+              rawUrl = `${GITHUB_RAW}/${path.split('/').map(encodeURIComponent).join('/')}`;
             }
-            // Extra fallback: if rawUrl contains 'wiki/wiki/', replace with 'wiki/'
             if (rawUrl.includes('wiki/wiki/')) {
               rawUrl = rawUrl.replace('wiki/wiki/', 'wiki/');
             }
@@ -242,7 +230,20 @@
                 <div class="note-banner" data-raw-url="${rawUrl}" style="width: 100%; height: 140px; background-color: #d4c5b9; background-size: cover; background-position: center; background-repeat: no-repeat; border-radius: 10px 10px 0 0;"></div>
                 <h3 class="card-title" style="margin-top: 12px;">${title}</h3>
                 <div style="flex: 1;"></div>
-                <div class="note-tags" style="position: absolute; left: 16px; bottom: 18px; display: flex; flex-wrap: wrap; gap: 6px; z-index: 2;"></div>
+                <div class="note-tags-scroll-wrap" style="position: absolute; left: 16px; right: 110px; bottom: 18px; z-index: 2; pointer-events: auto; max-width: calc(100% - 130px);">
+                  <div class="note-tags" style="display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; padding-bottom: 2px; -webkit-overflow-scrolling: touch; max-width: 100%; position: relative;"></div>
+                  <div class="tags-fade" style="position: absolute; right: 0; top: 0; width: 40px; height: 100%; pointer-events: none; background: linear-gradient(to right, transparent, var(--cream, #f5f0e6) 80%);"></div>
+                </div>
+                <style>
+                  .note-tags::-webkit-scrollbar {
+                    display: none;
+                  }
+                  .note-tags {
+                    scrollbar-width: none;
+                    -ms-overflow-style: none;
+                  }
+                  .tags-fade.hidden { display: none !important; }
+                </style>
                 <a href="post.html?note=${encodeURIComponent(path)}" class="btn" style="margin-top: 12px; align-self: flex-end;">Read</a>
               </article>
             `;
@@ -345,8 +346,41 @@
             const card = bannerElement.closest('.card');
             if (card && tags.length) {
               const tagsDiv = card.querySelector('.note-tags');
+              const fadeDiv = card.querySelector('.tags-fade');
+              // Social media icon map
+              const socialIcons = {
+                'youtube': {
+                  svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="#fff" style="vertical-align:middle;"><rect width="24" height="24" rx="5" fill="#FF0000"/><path d="M10 15.5V8.5L16 12L10 15.5Z" fill="#fff"/></svg>',
+                  bg: '#FF0000', color: '#fff'
+                },
+                'twitter': {
+                  svg: '<svg width="16" height="16" viewBox="0 0 24 24" fill="#1DA1F2" style="vertical-align:middle;"><rect width="24" height="24" rx="5" fill="#1DA1F2"/><path d="M19.633 7.997c.013.176.013.353.013.53 0 5.39-4.104 11.61-11.61 11.61-2.307 0-4.453-.676-6.26-1.84.32.037.637.05.97.05 1.92 0 3.687-.65 5.096-1.747-1.8-.037-3.32-1.22-3.843-2.85.25.037.5.062.763.062.37 0 .74-.05 1.085-.144-1.87-.375-3.28-2.03-3.28-4.02v-.05c.55.306 1.18.49 1.85.513a4.07 4.07 0 01-1.81-3.39c0-.75.2-1.45.55-2.05a11.62 11.62 0 008.42 4.27c-.062-.3-.1-.6-.1-.92 0-2.22 1.8-4.02 4.02-4.02 1.16 0 2.21.49 2.95 1.28a7.94 7.94 0 002.56-.98c-.28.87-.87 1.6-1.65 2.06a8.07 8.07 0 002.31-.62c-.52.81-1.17 1.52-1.92 2.09z" fill="#fff"/></svg>',
+                  bg: '#1DA1F2', color: '#fff'
+                }
+                // Add more social icons here as needed
+              };
+              function renderTag(tag) {
+                const lower = tag.toLowerCase();
+                if (socialIcons[lower]) {
+                  const icon = socialIcons[lower];
+                  return `<span style="display:inline-block;background:${icon.bg};color:${icon.color};font-size:0.85em;padding:2px 10px 2px 8px;border-radius:50px;box-shadow:0 1px 4px #0001;white-space:nowrap;vertical-align:middle;gap:4px;">${icon.svg}<span style='margin-left:6px;vertical-align:middle;'>${tag}</span></span>`;
+                }
+                return `<span style="display:inline-block;background:#f5f5f5;color:#444;font-size:0.85em;padding:2px 10px 2px 10px;border-radius:50px;box-shadow:0 1px 4px #0001;white-space:nowrap;">${tag}</span>`;
+              }
               if (tagsDiv) {
-                tagsDiv.innerHTML = tags.map(tag => `<span style="display:inline-block;background:var(--brown, #a89f99);color:var(--cream, #fff);font-size:0.85em;padding:2px 10px 2px 10px;border-radius:50px;margin-right:2px;box-shadow:0 1px 4px #0001;">${tag}</span>`).join(' ');
+                tagsDiv.innerHTML = tags.map(renderTag).join(' ');
+              }
+              // Hide fade at end of scroll
+              if (tagsDiv && fadeDiv) {
+                const updateFade = () => {
+                  if (tagsDiv.scrollWidth - tagsDiv.scrollLeft > tagsDiv.clientWidth + 2) {
+                    fadeDiv.classList.remove('hidden');
+                  } else {
+                    fadeDiv.classList.add('hidden');
+                  }
+                };
+                tagsDiv.addEventListener('scroll', updateFade);
+                setTimeout(updateFade, 10);
               }
             }
           } catch (e) {
