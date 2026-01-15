@@ -1,5 +1,5 @@
 ---
-banner: "![[zW9ZY.png]]"
+banner: https://i.sstatic.net/zW9ZY.png
 ---
 
 # Hack Assembly Cheat Reference (Nand2Tetris)

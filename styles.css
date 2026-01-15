@@ -186,9 +186,8 @@ body::-webkit-scrollbar {
     padding-top: 4px;
   }
 
-  /* Drop-cap for post content: apply to the first block element inside .post-body (paragraphs/headings/blockquote) */
-  .post-body::first-letter,
-  .post-body :is(p,h1,h2,h3,blockquote):first-child::first-letter {
+  /* Drop-cap for post content: only the first paragraph inside .post-body */
+  .post-body p:first-child::first-letter {
     font-size: 3.5rem;
     font-weight: 700;
     float: left;
@@ -223,8 +222,7 @@ body::-webkit-scrollbar {
   /* Smaller drop-cap on narrow screens to keep layout tidy */
   .card-excerpt::first-letter,
   .wiki-card-content p:first-child::first-letter,
-  .post-body::first-letter,
-  .post-body :is(p,h1,h2,h3,blockquote):first-child::first-letter {
+  .post-body p:first-child::first-letter {
     font-size: 1.6rem;
     padding-right: 6px;
     padding-top: 2px;
