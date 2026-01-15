@@ -62,10 +62,13 @@
       try {
         reloadBtn.disabled = true;
         reloadBtn.style.transform = 'rotate(360deg)';
+        // Disable theme toggle while fetching to avoid visual flicker or race conditions
+        if (window.setThemeToggleEnabled) window.setThemeToggleEnabled(false);
         await loadNotesContent();
       } finally {
         reloadBtn.style.transform = '';
         reloadBtn.disabled = false;
+        if (window.setThemeToggleEnabled) window.setThemeToggleEnabled(true);
       }
     });
 
