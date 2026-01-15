@@ -4,6 +4,7 @@ tags: #youtube #No_upchar
 title: The Entire FNAF Timeline
 youtube_url: https://static.wikia.nocookie.net/freddy-fazbears-pizza/images/d/da/FNaF1.jpg/revision/latest/scale-to-width-down/1200?cb=20230410020858
 channel_name: FuhNaff
+color : black
 subscribers: 647000
 length: 1:00:02
 publish_date: 2024-12-18
@@ -62,7 +63,8 @@ rating: ⭐⭐⭐⭐
 - **Upload Date:** Unknown
     
 - **Video Length:** Approximately 59 minutes (timestamps end near 00:58:39)
-    
+
+
 
 ---
 

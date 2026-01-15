@@ -231,20 +231,78 @@
         
         if (match) {
           const frontmatter = match[1];
-          const bannerMatch = frontmatter.match(/banner:\s*(.+)/);
+          const bannerMatch = frontmatter.match(/banner\s*:\s*(.+)/);
           if (bannerMatch) {
-            bannerUrl = bannerMatch[1].trim();
+            // Raw value may be a URL, markdown image, relative path, or data URI
+            let rawBanner = bannerMatch[1].trim().replace(/^['\"]|['\"]$/g, '');
+            // Extract src if provided as markdown image like ![alt](src)
+            const mdImg = rawBanner.match(/!\[[^\]]*\]\(([^)]+)\)/);
+            if (mdImg) rawBanner = mdImg[1].trim();
+            if (!rawBanner) rawBanner = null;
+            bannerUrl = rawBanner;
           }
+          // Parse optional note color/theme
+          let noteColor = null;
+          const colorMatch = frontmatter.match(/color\s*:\s*(.+)/i);
+          if (colorMatch) {
+            noteColor = colorMatch[1].trim().replace(/^['\"]|['\"]$/g, '').toLowerCase();
+            if (noteColor === 'default') noteColor = 'brown';
+          }
+
           // Detect a No_upchar flag (case-insensitive, '#' optional) in frontmatter
           hasNoUpChar = /(?:^|\s)#?no_upchar\b/i.test(frontmatter);
           // Remove frontmatter from content
           content = markdown.replace(frontmatterRegex, '');
         }
         
+        // Helper to resolve banner paths for posts (handles absolute, /paths, wiki/*, relative, data URIs)
+        function resolveBannerForNote(bannerVal, notePath) {
+          if (!bannerVal) return null;
+          let src = bannerVal.trim();
+          if (/^data:/i.test(src)) return src;
+          if (/^https?:\/\//i.test(src)) return src;
+          if (src.startsWith('/')) return `${GITHUB_RAW}/${src.replace(/^\/+/, '').split('/').map(encodeURIComponent).join('/')}`;
+          if (src.startsWith('wiki/')) return `${GITHUB_RAW}/${src.replace(/^wiki\/+/, '').split('/').map(encodeURIComponent).join('/')}`;
+          // Resolve relative to the note's directory
+          const base = `${GITHUB_RAW}/${notePath.split('/').slice(0, -1).map(encodeURIComponent).join('/')}/`;
+          try { return new URL(src, base).toString(); } catch (e) { return base + src.split('/').map(encodeURIComponent).join('/'); }
+        }
+
         // Set banner image if found
         if (bannerUrl) {
           const banner = document.querySelector('.post-banner');
-          banner.innerHTML = `<img src="${bannerUrl}" alt="Cover image" style="width:100%;height:100%;object-fit:cover;display:block;" />`;
+          const resolved = resolveBannerForNote(bannerUrl, path);
+          if (resolved) {
+            banner.innerHTML = `<img src="${resolved}" alt="Cover image" style="width:100%;height:100%;object-fit:cover;display:block;" />`;
+          }
+        }
+
+        // Apply note color/theme to the page if present (set data-theme or custom --note-accent)
+        if (typeof noteColor !== 'undefined' && noteColor) {
+          const themeNames = ['brown','blue','red','green','sky','purple','pink','orange','yellow','teal'];
+          const page = document.querySelector('.post-page');
+          if (themeNames.includes(noteColor)) {
+            page.setAttribute('data-theme', noteColor);
+            page.style.setProperty('--note-accent', 'var(--accent)');
+          } else if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(noteColor)) {
+            page.style.setProperty('--note-accent', noteColor);
+            // subtle tint overlay on banner
+            const bannerEl = document.querySelector('.post-banner');
+            if (bannerEl) {
+              bannerEl.style.position = bannerEl.style.position || 'relative';
+              let tint = bannerEl.querySelector('.banner-tint');
+              if (!tint) {
+                tint = document.createElement('div');
+                tint.className = 'banner-tint';
+                Object.assign(tint.style, {position:'absolute', inset:'0', pointerEvents:'none'});
+                bannerEl.appendChild(tint);
+              }
+              tint.style.background = noteColor;
+              tint.style.opacity = '0.08';
+            }
+          } else {
+            page.setAttribute('data-theme', noteColor);
+          }
         }
         
         // Parse and render markdown
@@ -295,6 +353,20 @@
         postBody.innerHTML = container.innerHTML;
         postBody.style.whiteSpace = 'normal';
         postBody.style.padding = '40px 40px 40px 40px';
+        // Apply note color to content area (if provided)
+        try {
+          const themeMap = { brown: '#8B4513', blue: '#3b82f6', red: '#ef4444', green: '#22c55e', sky: '#06b6d4', purple: '#a855f7', pink: '#ec4899', orange: '#f97316', yellow: '#eab308', teal: '#14b8a6' };
+          let accent = null;
+          if (typeof noteColor !== 'undefined' && noteColor) {
+            if (themeMap[noteColor]) accent = themeMap[noteColor];
+            else if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(noteColor)) accent = noteColor;
+          }
+          if (accent) {
+            postBody.style.setProperty('--note-accent', accent);
+            const headerH1 = document.querySelector('.post-header h1');
+            if (headerH1) headerH1.style.color = accent;
+          }
+        } catch(e) {}
         // Add dropcap class to first paragraph only if the No_upchar flag is NOT present
         const firstP = postBody.querySelector('p');
         if (firstP) {

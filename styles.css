@@ -187,6 +187,13 @@ body::-webkit-scrollbar {
     padding-top: 4px;
   }
 
+  /* Per-note content accent for wiki cards (set via --note-accent on .wiki-card-content when frontmatter provides `color`) */
+  .wiki-card-content { --note-accent: var(--primary); }
+  .wiki-card-content a { color: var(--note-accent); }
+  .wiki-card-content h2,
+  .wiki-card-content h3 { color: var(--note-accent); }
+  .wiki-card-content blockquote { border-left: 4px solid var(--note-accent); padding-left: 12px; color: rgba(0,0,0,0.85); }
+
   /* Drop-cap for post content: only the top-level first paragraph inside .post-body */
   .post-body:not(.no-upchar) > p:first-child::first-letter {
     font-size: 3.5rem;
@@ -196,6 +203,13 @@ body::-webkit-scrollbar {
     padding-right: 8px;
     padding-top: 6px;
   }
+  /* Note-aware content accent color (set via --note-accent on the .post-body element).
+     Accepts a hex value or a theme-derived accent. Defaults to var(--primary). */
+  .post-body { --note-accent: var(--primary); }
+  .post-body a { color: var(--note-accent); }
+  .post-body h2,
+  .post-body h3 { color: var(--note-accent); }
+  .post-body blockquote { border-left: 4px solid var(--note-accent); padding-left: 12px; color: rgba(0,0,0,0.85); }
 
 .btn { display:inline-block; border-radius:50px; background: var(--brown); color: var(--cream); text-decoration:none; padding:6px 12px; font-weight:700; letter-spacing:1px; align-self:flex-end; margin: 0 12px 12px 0; font-size: 14px; }
 .btn:hover { background: var(--cream); color: var(--brown); border:3px solid var(--brown); }

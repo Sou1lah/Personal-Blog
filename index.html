@@ -268,14 +268,15 @@
             let bannerUrl = null;
             let tags = [];
             if (fm) {
-              const bannerMatch = fm[1].match(/banner:\s*(.+)/);
+              const bannerMatch = fm[1].match(/banner\s*:\s*(.+)/);
               if (bannerMatch) {
-                bannerUrl = bannerMatch[1].trim().replace(/^['"]|['"]$/g, '');
-                if (bannerUrl.startsWith('http')) {
-                  // do nothing, use as is
-                } else if (bannerUrl.startsWith('/wiki/')) {
-                  bannerUrl = bannerUrl.replace('/wiki/', `${GITHUB_RAW}/`);
-                }
+                // Raw value from frontmatter; may be a bare URL, a markdown image, a relative path, or a data URI
+                let rawBanner = bannerMatch[1].trim().replace(/^['\"]|['\"]$/g, '');
+                // Extract src if user used markdown image syntax: ![alt](src)
+                const mdImg = rawBanner.match(/!\[[^\]]*\]\(([^)]+)\)/);
+                if (mdImg) rawBanner = mdImg[1].trim();
+                if (!rawBanner) rawBanner = null;
+                bannerUrl = rawBanner;
               }
               // Parse YAML array tags
               const tagsMatch = fm[1].match(/tags\s*:\s*\n([\s\S]*?)(\n\w|\ncssclasses:|$)/);
@@ -300,13 +301,40 @@
               }
               // Deduplicate tags
               tags = Array.from(new Set(tags.map(t => t.replace(/^#/, '').trim()).filter(Boolean)));
+
+              // Parse optional color field from frontmatter (supports theme names or hex colors)
+              let noteColor = null; // raw value
+              const colorMatch = fm[1].match(/color\s*:\s*(.+)/i);
+              if (colorMatch) {
+                noteColor = colorMatch[1].trim().replace(/^['\"]|['\"]$/g, '').toLowerCase();
+                if (noteColor === 'default') noteColor = 'brown';
+              }
             }
+
+            // Helper to resolve banner URLs to usable raw URLs (handles absolute, /paths, wiki/*, relative, data URIs)
+            function resolveBanner(bannerVal, noteRawUrl) {
+              if (!bannerVal) return null;
+              let src = bannerVal.trim();
+              if (/^data:/i.test(src)) return src;
+              if (/^https?:\/\//i.test(src)) return src;
+              if (src.startsWith('/')) return `${GITHUB_RAW}/${src.replace(/^\/+/, '').split('/').map(encodeURIComponent).join('/')}`;
+              if (src.startsWith('wiki/')) return `${GITHUB_RAW}/${src.replace(/^wiki\/+/, '').split('/').map(encodeURIComponent).join('/')}`;
+              let base = noteRawUrl || '';
+              if (base && base.startsWith('/wiki/')) base = `${GITHUB_RAW}/${base.replace(/^\/wiki\//, '')}`;
+              if (!/^https?:\/\//i.test(base)) base = `${GITHUB_RAW}/${base.replace(/^\/+/, '').split('/').map(encodeURIComponent).join('/')}`;
+              base = base.split('/').slice(0, -1).join('/') + '/';
+              try { return new URL(src, base).toString(); } catch (e) { return base + src.split('/').map(encodeURIComponent).join('/'); }
+            }
+
             if (bannerUrl) {
-              bannerElement.style.backgroundImage = `url('${bannerUrl}')`;
-              bannerElement.style.backgroundColor = 'transparent';
-              bannerElement.style.backgroundSize = 'cover';
-              bannerElement.style.backgroundPosition = 'center';
-              bannerElement.style.backgroundRepeat = 'no-repeat';
+              const resolvedBanner = resolveBanner(bannerUrl, rawUrl);
+              if (resolvedBanner) {
+                bannerElement.style.backgroundImage = `url(\"${resolvedBanner}\")`;
+                bannerElement.style.backgroundColor = 'transparent';
+                bannerElement.style.backgroundSize = 'cover';
+                bannerElement.style.backgroundPosition = 'center';
+                bannerElement.style.backgroundRepeat = 'no-repeat';
+              }
             } else {
               // Try to fetch banner again with fallback rawUrl
               let fallbackRawUrl = rawUrl.replace('wiki/wiki/', 'wiki/');
@@ -317,20 +345,20 @@
                     const fallbackMd = await fallbackR.text();
                     const fallbackFm = fallbackMd.match(/^---\n([\s\S]*?)\n---\n/);
                     if (fallbackFm) {
-                      const fallbackBannerMatch = fallbackFm[1].match(/banner:\s*(.+)/);
+                      const fallbackBannerMatch = fallbackFm[1].match(/banner\s*:\s*(.+)/);
                       if (fallbackBannerMatch) {
-                        bannerUrl = fallbackBannerMatch[1].trim().replace(/^['"]|['"]$/g, '');
-                        if (bannerUrl.startsWith('http')) {
-                          // do nothing
-                        } else if (bannerUrl.startsWith('/wiki/')) {
-                          bannerUrl = bannerUrl.replace('/wiki/', `${GITHUB_RAW}/`);
+                        let rawBanner = fallbackBannerMatch[1].trim().replace(/^['\"]|['\"]$/g, '');
+                        const mdImg = rawBanner.match(/!\[[^\]]*\]\(([^)]+)\)/);
+                        if (mdImg) rawBanner = mdImg[1].trim();
+                        const resolvedFallback = resolveBanner(rawBanner, fallbackRawUrl);
+                        if (resolvedFallback) {
+                          bannerElement.style.backgroundImage = `url("${resolvedFallback}")`;
+                          bannerElement.style.backgroundColor = 'transparent';
+                          bannerElement.style.backgroundSize = 'cover';
+                          bannerElement.style.backgroundPosition = 'center';
+                          bannerElement.style.backgroundRepeat = 'no-repeat';
+                          continue;
                         }
-                        bannerElement.style.backgroundImage = `url('${bannerUrl}')`;
-                        bannerElement.style.backgroundColor = 'transparent';
-                        bannerElement.style.backgroundSize = 'cover';
-                        bannerElement.style.backgroundPosition = 'center';
-                        bannerElement.style.backgroundRepeat = 'no-repeat';
-                        continue;
                       }
                     }
                   }

@@ -264,15 +264,48 @@
 
         container.innerHTML = html;
 
-        // Fetch and render markdown content for each card
+        // Fetch and render markdown content for each card (honor note frontmatter like `color`)
         const contentElements = container.querySelectorAll('.wiki-card-content');
         for (const element of contentElements) {
           const rawUrl = element.getAttribute('data-raw-url');
           try {
             const response = await fetch(rawUrl);
             if (response.ok) {
-              const markdown = await response.text();
+              let markdown = await response.text();
+
+              // Extract frontmatter color if present and remove frontmatter from content
+              let noteColor = null;
+              const fmMatch = markdown.match(/^---\n([\s\S]*?)\n---\n/);
+              if (fmMatch) {
+                const fmText = fmMatch[1];
+                const colorMatch = fmText.match(/color\s*:\s*(.+)/i);
+                if (colorMatch) {
+                  noteColor = colorMatch[1].trim().replace(/^['\"]|['\"]$/g, '').toLowerCase();
+                  if (noteColor === 'default') noteColor = 'brown';
+                }
+                // strip frontmatter for rendering
+                markdown = markdown.replace(/^---\n([\s\S]*?)\n---\n/, '');
+              }
+
               element.innerHTML = marked.parse(markdown);
+
+              // Compute accent color from theme name or hex, and apply to this card content
+              if (noteColor) {
+                const themeMap = { brown: '#8B4513', blue: '#3b82f6', red: '#ef4444', green: '#22c55e', sky: '#06b6d4', purple: '#a855f7', pink: '#ec4899', orange: '#f97316', yellow: '#eab308', teal: '#14b8a6' };
+                let accent = null;
+                if (themeMap[noteColor]) accent = themeMap[noteColor];
+                else if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(noteColor)) accent = noteColor;
+
+                if (accent) {
+                  element.style.setProperty('--note-accent', accent);
+                  // also color the card title for clearer signal
+                  const titleEl = element.closest('.wiki-card')?.querySelector('.wiki-card-title');
+                  if (titleEl) titleEl.style.color = accent;
+                } else {
+                  // If it's a theme name but not in our map, set the attribute on the card to allow CSS theme blocks to apply
+                  element.closest('.wiki-card')?.setAttribute('data-theme', noteColor);
+                }
+              }
             }
           } catch (error) {
             console.error(`Error fetching content from ${rawUrl}:`, error);
