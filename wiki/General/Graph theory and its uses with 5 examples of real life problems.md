@@ -1,5 +1,6 @@
 ---
 banner: https://upload.wikimedia.org/wikipedia/commons/e/e5/Bridges_of_Konigsberg.png
+tags: #graph-theory
 title: Graph theory and its uses with 5 examples of real life problems
 source:
 author:
@@ -7,7 +8,6 @@ author:
 published: 2022-05-11
 created: 2026-01-15
 description: In the early 18-th century, there was a recreational mathematical puzzle called the Königsberg bridge problem. The solution of this problem, though simple, opened the world to a new field in mathematics called graph theory. In today’s world, graph theory has expanded beyond mathematics into our everyday life without us even noticing.
-tags: #graph-theory
 cssclasses:
   - bg--lines
 color : default
