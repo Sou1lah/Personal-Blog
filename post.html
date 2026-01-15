@@ -10,6 +10,7 @@
   <style>
     .post-page {
       max-width: 950px;
+      overflow: hidden;
       margin: 0 auto;
       padding: 0;
       border-left: 3px solid var(--brown);
@@ -93,6 +94,7 @@
   </style>
 </head>
 <body>
+  <div id="progressBar" style="position:fixed;top:0;left:0;width:0;height:5px;background:var(--brown);z-index:2000;transition:width 0.2s;"></div>
   <div class="post-page">
     <a href="index.html" class="back-btn">← Back</a>
     
@@ -108,10 +110,43 @@
     <div class="post-body" id="postContent">
       Post content will load here...
     </div>
-    <button id="goTopBtn" title="Go to top" style="display:none;position:fixed;bottom:40px;right:40px;z-index:1000;padding:12px 18px;font-size:1.2rem;background:var(--brown);color:var(--cream);border:none;border-radius:50px;box-shadow:0 2px 8px rgba(0,0,0,0.08);cursor:pointer;transition:background 0.2s;">↑ Top</button>
+    <div id="imgZoomOverlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);z-index:3000;align-items:center;justify-content:center;cursor:zoom-out;"></div>
+    <button id="goTopBtn" title="Go to top" style="display:none;position:fixed;bottom:40px;right:40px;z-index:1000;padding:12px 14px;background:var(--brown);color:var(--cream);border:none;border-radius:50px;box-shadow:0 2px 8px rgba(0,0,0,0.08);cursor:pointer;transition:background 0.2s;">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;" aria-hidden="true"><polyline points="18 15 12 9 6 15"></polyline></svg>
+    </button>
   </div>
 
   <script>
+                // Image zoom logic
+                const imgZoomOverlay = document.getElementById('imgZoomOverlay');
+                function enableImageZoom() {
+                  const imgs = document.querySelectorAll('.post-body img');
+                  imgs.forEach(img => {
+                    img.style.cursor = 'zoom-in';
+                    img.addEventListener('click', function(e) {
+                      imgZoomOverlay.innerHTML = `<img src="${img.src}" style="max-width:90vw;max-height:90vh;box-shadow:0 4px 32px #0008;border-radius:12px;display:block;margin:auto;" />`;
+                      imgZoomOverlay.style.display = 'flex';
+                    });
+                  });
+                }
+                imgZoomOverlay.addEventListener('click', function() {
+                  imgZoomOverlay.style.display = 'none';
+                  imgZoomOverlay.innerHTML = '';
+                });
+            // Reading progress bar logic
+            const progressBar = document.getElementById('progressBar');
+            window.addEventListener('scroll', () => {
+              const postPage = document.querySelector('.post-page');
+              if (!postPage) return;
+              const rect = postPage.getBoundingClientRect();
+              const scrollTop = window.scrollY || document.documentElement.scrollTop;
+              const docHeight = postPage.scrollHeight - window.innerHeight;
+              let percent = 0;
+              if (docHeight > 0) {
+                percent = Math.min(100, Math.max(0, (scrollTop / docHeight) * 100));
+              }
+              progressBar.style.width = percent + '%';
+            });
         // Go to Top button logic
         const goTopBtn = document.getElementById('goTopBtn');
         window.addEventListener('scroll', () => {
@@ -261,6 +296,8 @@
         if (firstP) {
           firstP.classList.add('dropcap');
         }
+        // Enable image zoom for all images
+        enableImageZoom();
       } catch (error) {
         console.error('Error loading note:', error);
         document.getElementById('postTitle').textContent = "Error Loading Note";
