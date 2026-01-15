@@ -1,4 +1,5 @@
 ---
+banner : https://static.wikia.nocookie.net/freddy-fazbears-pizza/images/d/da/FNaF1.jpg/revision/latest/scale-to-width-down/1200?cb=20230410020858
 tags: #youtube
 title: The Entire FNAF Timeline
 youtube_url: https://static.wikia.nocookie.net/freddy-fazbears-pizza/images/d/da/FNaF1.jpg/revision/latest/scale-to-width-down/1200?cb=20230410020858
@@ -44,7 +45,7 @@ hashtags:
   - "#FuhNaffTimeline"
   - "#JohnFuhnaff"
   - "#timeline"
-banner : https://static.wikia.nocookie.net/freddy-fazbears-pizza/images/d/da/FNaF1.jpg/revision/latest/scale-to-width-down/1200?cb=20230410020858
+
 description: |
   "The Entire FNAF Timeline"  
   Hey everyone! In today's video I share my version of the FNAF Timeline! This video has been in the works for a very long time, and I genuinely hope you enjoy it.  
