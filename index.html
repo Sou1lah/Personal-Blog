@@ -268,25 +268,35 @@
               const bannerMatch = fm[1].match(/banner:\s*(.+)/);
               if (bannerMatch) {
                 bannerUrl = bannerMatch[1].trim().replace(/^['"]|['"]$/g, '');
-                // Use bannerUrl directly if it's absolute
                 if (bannerUrl.startsWith('http')) {
                   // do nothing, use as is
                 } else if (bannerUrl.startsWith('/wiki/')) {
                   bannerUrl = bannerUrl.replace('/wiki/', `${GITHUB_RAW}/`);
                 }
               }
-              // Parse tags (YAML array or single line)
-              const tagsMatch = fm[1].match(/tags:\s*\n([\s\S]*?)(\n\w|\ncssclasses:|$)/);
+              // Parse YAML array tags
+              const tagsMatch = fm[1].match(/tags\s*:\s*\n([\s\S]*?)(\n\w|\ncssclasses:|$)/);
               if (tagsMatch) {
-                // YAML array style
                 tags = tagsMatch[1].split('\n').map(t => t.replace(/^-\s*/, '').trim()).filter(Boolean);
-              } else {
-                // Try single-line tags: tags: tag1, tag2
-                const tagsInline = fm[1].match(/tags:\s*([^\n]+)/);
-                if (tagsInline) {
-                  tags = tagsInline[1].split(',').map(t => t.trim()).filter(Boolean);
-                }
               }
+              // Parse inline tags (e.g. tags: #tag1 #tag2 or tags: tag1, tag2)
+              const tagsInline = fm[1].match(/tags\s*:?\s*([^\n]+)/);
+              if (tagsInline) {
+                // Extract hashtags and/or comma/space separated tags
+                const inline = tagsInline[1];
+                // Find all #hashtags
+                const hashTags = Array.from(inline.matchAll(/#(\w[\w-]*)/g)).map(m => m[1]);
+                // Find comma-separated tags
+                const commaTags = inline.split(',').map(t => t.trim()).filter(t => t && !t.startsWith('#'));
+                // Find space-separated tags (if not comma-separated)
+                let spaceTags = [];
+                if (!inline.includes(',')) {
+                  spaceTags = inline.split(/\s+/).map(t => t.replace(/^#/, '').trim()).filter(t => t && t !== '');
+                }
+                tags = tags.concat(hashTags, commaTags, spaceTags);
+              }
+              // Deduplicate tags
+              tags = Array.from(new Set(tags.map(t => t.replace(/^#/, '').trim()).filter(Boolean)));
             }
             if (bannerUrl) {
               bannerElement.style.backgroundImage = `url('${bannerUrl}')`;
