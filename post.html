@@ -9,7 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     .post-page {
-      max-width: 700px;
+      max-width: 950px;
       margin: 0 auto;
       padding: 0;
       border-left: 3px solid var(--brown);
@@ -60,7 +60,7 @@
       white-space: pre-wrap;
     }
 
-    .post-body::first-letter {
+    .post-body .dropcap::first-letter {
       font-size: 3.5rem;
       font-weight: 700;
       float: left;
@@ -108,9 +108,22 @@
     <div class="post-body" id="postContent">
       Post content will load here...
     </div>
+    <button id="goTopBtn" title="Go to top" style="display:none;position:fixed;bottom:40px;right:40px;z-index:1000;padding:12px 18px;font-size:1.2rem;background:var(--brown);color:var(--cream);border:none;border-radius:50px;box-shadow:0 2px 8px rgba(0,0,0,0.08);cursor:pointer;transition:background 0.2s;">↑ Top</button>
   </div>
 
   <script>
+        // Go to Top button logic
+        const goTopBtn = document.getElementById('goTopBtn');
+        window.addEventListener('scroll', () => {
+          if (window.scrollY > 200) {
+            goTopBtn.style.display = 'block';
+          } else {
+            goTopBtn.style.display = 'none';
+          }
+        });
+        goTopBtn && goTopBtn.addEventListener('click', () => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
     const GITHUB_RAW = 'https://raw.githubusercontent.com/Sou1lah/Personal-Blog/main';
     
     // Get post ID or note from URL
@@ -193,9 +206,7 @@
         // Set banner image if found
         if (bannerUrl) {
           const banner = document.querySelector('.post-banner');
-          banner.style.backgroundImage = `url('${bannerUrl}')`;
-          banner.style.backgroundSize = 'cover';
-          banner.style.backgroundPosition = 'center';
+          banner.innerHTML = `<img src="${bannerUrl}" alt="Cover image" style="width:100%;height:100%;object-fit:cover;display:block;" />`;
         }
         
         // Parse and render markdown
@@ -245,6 +256,11 @@
         postBody.innerHTML = container.innerHTML;
         postBody.style.whiteSpace = 'normal';
         postBody.style.padding = '40px 40px 40px 40px';
+        // Add dropcap class to first paragraph only
+        const firstP = postBody.querySelector('p');
+        if (firstP) {
+          firstP.classList.add('dropcap');
+        }
       } catch (error) {
         console.error('Error loading note:', error);
         document.getElementById('postTitle').textContent = "Error Loading Note";

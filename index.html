@@ -217,13 +217,21 @@
 
           for (const file of items) {
             const title = file.name.replace('.md', '').replace(/_/g, ' ');
-            const path = category === 'Root' ? `wiki/${file.name}` : `wiki/${category}/${file.name}`;
+            // Remove duplicated wiki/ if present
+            let path = category === 'Root' ? `wiki/${file.name}` : `wiki/${category}/${file.name}`;
+            if (path.startsWith('wiki/wiki/')) {
+              path = path.replace('wiki/wiki/', 'wiki/');
+            }
             // Encode each path segment to handle spaces and special characters
             let rawUrl;
             if (typeof usedLocalCategories !== 'undefined' && usedLocalCategories) {
               rawUrl = `/${path.split('/').map(encodeURIComponent).join('/')}`; // local path on dev server
             } else {
               rawUrl = `${GITHUB_RAW}/${path.split('/').map(encodeURIComponent).join('/')}`; // GitHub raw
+            }
+            // Extra fallback: if rawUrl contains 'wiki/wiki/', replace with 'wiki/'
+            if (rawUrl.includes('wiki/wiki/')) {
+              rawUrl = rawUrl.replace('wiki/wiki/', 'wiki/');
             }
             console.log('Raw note URL:', rawUrl);
 
@@ -248,15 +256,18 @@
           const rawUrl = bannerElement.getAttribute('data-raw-url');
           try {
             const r = await fetch(rawUrl);
-            if (!r.ok) throw new Error('Failed to fetch markdown');
+            if (!r.ok) throw new Error('Failed to fetch markdown: ' + rawUrl);
             const md = await r.text();
             const fm = md.match(/^---\n([\s\S]*?)\n---\n/);
             let bannerUrl = null;
             if (fm) {
               const bannerMatch = fm[1].match(/banner:\s*(.+)/);
               if (bannerMatch) {
-                bannerUrl = bannerMatch[1].trim().replace(/^['\"]|['\"]$/g, '');
-                if (bannerUrl.startsWith('/wiki/')) {
+                bannerUrl = bannerMatch[1].trim().replace(/^['"]|['"]$/g, '');
+                // Use bannerUrl directly if it's absolute
+                if (bannerUrl.startsWith('http')) {
+                  // do nothing, use as is
+                } else if (bannerUrl.startsWith('/wiki/')) {
                   bannerUrl = bannerUrl.replace('/wiki/', `${GITHUB_RAW}/`);
                 }
               }
@@ -268,6 +279,36 @@
               bannerElement.style.backgroundPosition = 'center';
               bannerElement.style.backgroundRepeat = 'no-repeat';
             } else {
+              // Try to fetch banner again with fallback rawUrl
+              let fallbackRawUrl = rawUrl.replace('wiki/wiki/', 'wiki/');
+              if (fallbackRawUrl !== rawUrl) {
+                try {
+                  const fallbackR = await fetch(fallbackRawUrl);
+                  if (fallbackR.ok) {
+                    const fallbackMd = await fallbackR.text();
+                    const fallbackFm = fallbackMd.match(/^---\n([\s\S]*?)\n---\n/);
+                    if (fallbackFm) {
+                      const fallbackBannerMatch = fallbackFm[1].match(/banner:\s*(.+)/);
+                      if (fallbackBannerMatch) {
+                        bannerUrl = fallbackBannerMatch[1].trim().replace(/^['"]|['"]$/g, '');
+                        if (bannerUrl.startsWith('http')) {
+                          // do nothing
+                        } else if (bannerUrl.startsWith('/wiki/')) {
+                          bannerUrl = bannerUrl.replace('/wiki/', `${GITHUB_RAW}/`);
+                        }
+                        bannerElement.style.backgroundImage = `url('${bannerUrl}')`;
+                        bannerElement.style.backgroundColor = 'transparent';
+                        bannerElement.style.backgroundSize = 'cover';
+                        bannerElement.style.backgroundPosition = 'center';
+                        bannerElement.style.backgroundRepeat = 'no-repeat';
+                        continue;
+                      }
+                    }
+                  }
+                } catch (fallbackErr) {
+                  console.error('Fallback fetch failed:', fallbackErr);
+                }
+              }
               bannerElement.style.backgroundImage = `url("https://raw.githubusercontent.com/Sou1lah/Personal-Blog/main/assets/ImagePlaceholder.jpg")`;
               bannerElement.style.backgroundColor = '#e8e8e8';
               bannerElement.style.backgroundSize = 'cover';
@@ -275,6 +316,7 @@
               bannerElement.style.backgroundRepeat = 'no-repeat';
             }
           } catch (e) {
+            console.error('Banner fetch error:', e);
             bannerElement.style.backgroundImage = `url("https://raw.githubusercontent.com/Sou1lah/Personal-Blog/main/assets/ImagePlaceholder.jpg")`;
             bannerElement.style.backgroundColor = '#e8e8e8';
             bannerElement.style.backgroundSize = 'cover';

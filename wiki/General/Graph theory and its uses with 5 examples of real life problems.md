@@ -12,8 +12,6 @@ tags:
 cssclasses:
   - bg--lines
 ---
-# Topic
-
 Machine Learning Engineering
 
 In the early 18-th century, there was a recreational mathematical puzzle called the Königsberg bridge problem. The solution of this problem, though simple, opened the world to a new field in mathematics called graph theory. In today’s world, graph theory has expanded beyond mathematics into our everyday life without us even noticing.
