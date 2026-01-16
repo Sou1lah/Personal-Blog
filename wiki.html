@@ -184,6 +184,24 @@
     const GITHUB_API = 'https://api.github.com/repos/Sou1lah/Personal-Blog/contents/wiki';
     const GITHUB_RAW = 'https://raw.githubusercontent.com/Sou1lah/Personal-Blog/main/wiki';
 
+    // Small helpers used when rendering wiki card previews
+    function isValidCssColor(value) {
+      const s = new Option().style;
+      s.color = '';
+      s.color = value;
+      return s.color !== '';
+    }
+    function cssColorToRgb(color) {
+      const el = document.createElement('div');
+      el.style.color = color;
+      el.style.display = 'none';
+      document.body.appendChild(el);
+      const cs = getComputedStyle(el).color;
+      document.body.removeChild(el);
+      const m = cs.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+      return m ? `${m[1]}, ${m[2]}, ${m[3]}` : null;
+    }
+
     async function fetchWikiFiles() {
       const container = document.getElementById('wikiContainer');
       
@@ -273,8 +291,9 @@
             if (response.ok) {
               let markdown = await response.text();
 
-              // Extract frontmatter color if present and remove frontmatter from content
+              // Extract frontmatter color and text if present and remove frontmatter from content
               let noteColor = null;
+              let noteText = null;
               const fmMatch = markdown.match(/^---\n([\s\S]*?)\n---\n/);
               if (fmMatch) {
                 const fmText = fmMatch[1];
@@ -282,6 +301,10 @@
                 if (colorMatch) {
                   noteColor = colorMatch[1].trim().replace(/^['\"]|['\"]$/g, '').toLowerCase();
                   if (noteColor === 'default') noteColor = 'brown';
+                }
+                const textMatch = fmText.match(/text\s*:\s*(.+)/i);
+                if (textMatch) {
+                  noteText = textMatch[1].trim().replace(/^['\"]|['\"]$/g, '').toLowerCase();
                 }
                 // strip frontmatter for rendering
                 markdown = markdown.replace(/^---\n([\s\S]*?)\n---\n/, '');
@@ -304,6 +327,34 @@
                 } else {
                   // If it's a theme name but not in our map, set the attribute on the card to allow CSS theme blocks to apply
                   element.closest('.wiki-card')?.setAttribute('data-theme', noteColor);
+                }
+
+                // Honor explicit `text:` frontmatter for wiki previews (e.g., `text: white`)
+                if (noteText) {
+                  const card = element.closest('.wiki-card');
+                  let mappedText = null;
+                  if (themeMap[noteText]) mappedText = themeMap[noteText];
+                  else if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(noteText)) mappedText = noteText;
+                  else if (isValidCssColor(noteText)) mappedText = noteText;
+
+                  if (mappedText) {
+                    element.style.color = mappedText;
+                    if (card) card.style.color = mappedText;
+                    const titleEl = card?.querySelector('.wiki-card-title');
+                    if (titleEl) titleEl.style.color = mappedText;
+                  }
+
+                  // Special-case: author requested white text on a black color — preview the dark theme so white text is visible
+                  if (noteText === 'white' && (noteColor === 'black' || noteColor === '#000' || noteColor === '#000000')) {
+                    if (card) {
+                      card.style.background = '#000000';
+                      card.style.borderColor = '#111111';
+                      card.style.color = '#FFFFFF';
+                      element.style.color = '#FFFFFF';
+                      const titleEl = card.querySelector('.wiki-card-title');
+                      if (titleEl) titleEl.style.color = '#FFFFFF';
+                    }
+                  }
                 }
               }
             }
