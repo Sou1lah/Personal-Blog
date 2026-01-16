@@ -534,6 +534,13 @@
         // Resolve relative image paths to GitHub raw URLs so images load when viewing notes
         const container = document.createElement('div');
         container.innerHTML = html;
+
+        // If the original markdown included raw HTML (e.g., <div> blocks), marked may escape it in the output.
+        // Restore escaped tags so author-provided HTML blocks render correctly.
+        if (/<\s*\/?\w+[^>]*>/m.test(content)) {
+          container.innerHTML = container.innerHTML.replace(/&lt;([a-zA-Z\/][^&]*)&gt;/g, '<$1>');
+        }
+
         const imgs = container.querySelectorAll('img');
         const baseDirUrl = `${GITHUB_RAW}/${path.split('/').slice(0, -1).map(encodeURIComponent).join('/')}/`;
         imgs.forEach(img => {
