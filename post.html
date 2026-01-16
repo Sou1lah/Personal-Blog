@@ -16,13 +16,15 @@
       border-left: 3px solid var(--brown);
       border-right: 3px solid var(--brown);
       min-height: 100vh;
-      background: var(--cream);
+      /* subtle, lighter gradient so the full-viewport tint remains visible */
+      background: linear-gradient(180deg, rgba(var(--theme-rgb), 0.04) 0%, rgba(var(--theme-rgb), 0.02) 40%, var(--cream) 100%);
       position: relative;
     }
 
     .post-banner {
       height: 300px;
-      background: linear-gradient(135deg, #d4c5b9 0%, #a89f99 100%);
+      /* banner gradient mixes theme color with existing banner tones for cohesion */
+      background: linear-gradient(135deg, rgba(var(--theme-rgb), 0.14) 0%, rgba(var(--theme-rgb), 0.08) 100%);
       position: relative;
       overflow: hidden;
     }
@@ -34,7 +36,8 @@
       left: 0;
       right: 0;
       height: 100px;
-      background: linear-gradient(to bottom, transparent, var(--cream));
+      /* use theme-aware tint for the banner fade */
+      background: linear-gradient(to bottom, transparent, rgba(var(--theme-rgb), 0.06));
       pointer-events: none;
     }
 
@@ -59,6 +62,9 @@
       line-height: 1.8;
       color: var(--brown);
       white-space: pre-wrap;
+      /* content uses a soft theme gradient for a tasteful accent */
+      background: linear-gradient(180deg, rgba(var(--theme-rgb), 0.06) 0%, var(--cream) 100%);
+      border-top: 1px solid rgba(0,0,0,0.06);
     }
 
     .post-body:not(.no-upchar) .dropcap::first-letter {
@@ -161,6 +167,210 @@
         });
     const GITHUB_RAW = 'https://raw.githubusercontent.com/Sou1lah/Personal-Blog/main';
     
+    // Small front-matter parser and theme helper
+    function parseFrontMatter(md) {
+      const match = md.match(/^---\s*\n([\s\S]*?)\n---\s*\n?/);
+      if (!match) return { data: {}, content: md };
+      const yaml = match[1];
+      const content = md.slice(match[0].length);
+      const data = {};
+      yaml.split(/\r?\n/).forEach(line => {
+        if (!line.trim()) return;
+        const idx = line.indexOf(':');
+        if (idx === -1) return;
+        const key = line.slice(0, idx).trim();
+        let value = line.slice(idx + 1).trim();
+        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+          value = value.slice(1, -1);
+        }
+        data[key] = value;
+      });
+      return { data, content };
+    }
+
+    const THEMES = {
+      sea: "#0ea5e9",
+      forest: "#16a34a",
+      desert: "#d97706",
+      myth: "#7c3aed",
+      brown: "#8B4513",
+      blue: "#3b82f6",
+      red: "#ef4444",
+      green: "#22c55e",
+      sky: "#06b6d4",
+      purple: "#a855f7",
+      pink: "#ec4899",
+      orange: "#f97316",
+      yellow: "#eab308",
+      teal: "#14b8a6"
+    };
+
+    function isValidCssColor(value) {
+      const s = new Option().style;
+      s.color = '';
+      s.color = value;
+      return s.color !== '';
+    }
+
+    function cssColorToRgb(color) {
+      // Convert any valid CSS color (named, hex, rgb) into an "r, g, b" string
+      const el = document.createElement('div');
+      el.style.color = color;
+      el.style.display = 'none';
+      document.body.appendChild(el);
+      const cs = getComputedStyle(el).color;
+      document.body.removeChild(el);
+      const m = cs.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+      return m ? `${m[1]}, ${m[2]}, ${m[3]}` : null;
+    }
+
+    function applyNoteTheme(colorValue) {
+      // Temporarily suppress transitions/animations so theme applies instantly
+      document.body.classList.add('no-transitions');
+      document.documentElement.classList.add('no-transitions');
+
+      // Helper: lighten/darken by mixing with white or scaling
+      function mixWithWhite(rgbArr, t) {
+        return rgbArr.map((c) => Math.round(c + (255 - c) * t));
+      }
+      function darken(rgbArr, t) {
+        return rgbArr.map((c) => Math.round(c * (1 - t)));
+      }
+      function rgbArrToString(arr) { return `${arr[0]}, ${arr[1]}, ${arr[2]}`; }
+      function rgbArrToHex(arr) {
+        return (
+          '#' +
+          arr
+            .map((c) => c.toString(16).padStart(2, '0'))
+            .join('')
+            .toUpperCase()
+        );
+      }
+      function luminance(rgbArr) {
+        const [r, g, b] = rgbArr.map((v) => v / 255).map((c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)));
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      }
+
+      // If no colorValue, remove any existing note theme without animation
+      if (!colorValue) {
+        const page = document.querySelector('.post-page');
+        document.documentElement.style.removeProperty('--theme-color');
+        document.documentElement.style.removeProperty('--theme-rgb');
+        document.documentElement.style.removeProperty('--theme-bg');
+        document.documentElement.style.removeProperty('--theme-text');
+        if (page) {
+          page.style.removeProperty('--note-accent');
+          page.style.borderLeftColor = '';
+          page.style.borderRightColor = '';
+          const header = page.querySelector('.post-header');
+          if (header) header.style.borderBottomColor = '';
+        }
+        window.__noteTheme = null;
+        document.body.classList.remove('note-theme');
+
+        // Remove suppression on next paint so transitions return
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            document.body.classList.remove('no-transitions');
+            document.documentElement.classList.remove('no-transitions');
+          });
+        });
+        return;
+      }
+
+      const resolved = THEMES[colorValue] || (isValidCssColor(colorValue) ? colorValue : null);
+      const page = document.querySelector('.post-page');
+      if (resolved) {
+        // Base RGB for computations
+        const baseRgbStr = cssColorToRgb(resolved) || '36, 34, 27';
+        const baseRgb = baseRgbStr.split(',').map((s) => parseInt(s.trim(), 10));
+
+        // Create a soft background (lightened) and a stronger accent (slightly darkened)
+        const bgRgbArr = mixWithWhite(baseRgb, 0.78); // very light background
+        const accentRgbArr = darken(baseRgb, 0.08); // slightly richer accent
+
+        const bgRgbStr = rgbArrToString(bgRgbArr);
+        const accentRgbStr = rgbArrToString(accentRgbArr);
+        const accentHex = rgbArrToHex(accentRgbArr);
+
+        // Set CSS variables used by the stylesheet
+        document.documentElement.style.setProperty('--theme-color', accentHex);
+        document.documentElement.style.setProperty('--theme-rgb', accentRgbStr);
+        document.documentElement.style.setProperty('--theme-bg', `rgb(${bgRgbStr})`);
+
+        // Choose readable text color over the background
+        const bgLum = luminance(bgRgbArr);
+        const textColor = bgLum > 0.6 ? getComputedStyle(document.documentElement).getPropertyValue('--brown').trim() || '#24221b' : getComputedStyle(document.documentElement).getPropertyValue('--cream').trim() || '#e4dcc9';
+        document.documentElement.style.setProperty('--theme-text', textColor);
+
+        if (page) {
+          page.style.setProperty('--note-accent', accentHex);
+          // accent the page borders and header divider for a full-page color theme
+          page.style.borderLeftColor = accentHex;
+          page.style.borderRightColor = accentHex;
+          const header = page.querySelector('.post-header');
+          if (header) {
+            header.style.borderBottomColor = accentHex;
+            header.style.background = `rgba(${accentRgbStr}, 0.06)`;
+          }
+        }
+
+        // Persist theme info
+        window.__noteTheme = { colorValue, resolved, rgb: accentRgbStr };
+        document.body.classList.add('note-theme');
+      } else {
+        // Unknown color -> remove inline styles and fallback to defaults
+        document.documentElement.style.removeProperty('--theme-color');
+        document.documentElement.style.removeProperty('--theme-rgb');
+        document.documentElement.style.removeProperty('--theme-bg');
+        document.documentElement.style.removeProperty('--theme-text');
+        if (page) {
+          page.style.removeProperty('--note-accent');
+          page.style.borderLeftColor = '';
+          page.style.borderRightColor = '';
+          const header = page.querySelector('.post-header');
+          if (header) header.style.borderBottomColor = '';
+        }
+        window.__noteTheme = null;
+        document.body.classList.remove('note-theme');
+      }
+
+      // Remove suppression on next paint so transitions return
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          document.body.classList.remove('no-transitions');
+          document.documentElement.classList.remove('no-transitions');
+        });
+      });
+    }
+
+    // Ensure theme persists during scrolling (re-apply if some other code removes variables)
+    window.addEventListener('scroll', () => {
+      try {
+        if (window.__noteTheme) {
+          const { resolved, rgb } = window.__noteTheme;
+          const currentRgb = getComputedStyle(document.documentElement).getPropertyValue('--theme-rgb').trim();
+          const currentColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-color').trim();
+          // Re-apply only if missing or changed
+          if (!currentRgb || !currentColor || !currentColor.includes(resolved) || !currentRgb.includes(rgb)) {
+            document.documentElement.style.setProperty('--theme-color', resolved);
+            document.documentElement.style.setProperty('--theme-rgb', rgb);
+            const page = document.querySelector('.post-page');
+            if (page) {
+              page.style.setProperty('--note-accent', resolved);
+              page.style.borderLeftColor = resolved;
+              page.style.borderRightColor = resolved;
+              const header = page.querySelector('.post-header');
+              if (header) {
+                header.style.borderBottomColor = resolved;
+                header.style.background = `rgba(${rgb}, 0.06)`;
+              }
+            }
+          }
+        }
+      } catch (e) { /* be robust */ }
+    });
+
     // Get post ID or note from URL
     const params = new URLSearchParams(window.location.search);
     const postId = params.get('id');
@@ -221,40 +431,35 @@
         
         const markdown = await response.text();
         
-        // Extract frontmatter (banner URL) and detect display flags like No_upchar
+        // Use parseFrontMatter to extract frontmatter and content (banner, color, flags)
         let bannerUrl = null;
         let content = markdown;
         let hasNoUpChar = false;
-        
-        const frontmatterRegex = /^---\n([\s\S]*?)\n---\n/;
-        const match = markdown.match(frontmatterRegex);
-        
-        if (match) {
-          const frontmatter = match[1];
-          const bannerMatch = frontmatter.match(/banner\s*:\s*(.+)/);
-          if (bannerMatch) {
-            // Raw value may be a URL, markdown image, relative path, or data URI
-            let rawBanner = bannerMatch[1].trim().replace(/^['\"]|['\"]$/g, '');
-            // Extract src if provided as markdown image like ![alt](src)
-            const mdImg = rawBanner.match(/!\[[^\]]*\]\(([^)]+)\)/);
-            if (mdImg) rawBanner = mdImg[1].trim();
-            if (!rawBanner) rawBanner = null;
-            bannerUrl = rawBanner;
-          }
-          // Parse optional note color/theme
-          let noteColor = null;
-          const colorMatch = frontmatter.match(/color\s*:\s*(.+)/i);
-          if (colorMatch) {
-            noteColor = colorMatch[1].trim().replace(/^['\"]|['\"]$/g, '').toLowerCase();
-            if (noteColor === 'default') noteColor = 'brown';
-          }
+        const parsed = parseFrontMatter(markdown);
+        const data = parsed.data || {};
+        content = parsed.content || markdown;
 
-          // Detect a No_upchar flag (case-insensitive, '#' optional) in frontmatter
-          hasNoUpChar = /(?:^|\s)#?no_upchar\b/i.test(frontmatter);
-          // Remove frontmatter from content
-          content = markdown.replace(frontmatterRegex, '');
+        // banner handling (frontmatter key: banner)
+        if (data.banner) {
+          let rawBanner = data.banner.trim().replace(/^['\"]|['\"]$/g, '');
+          const mdImg = rawBanner.match(/!\[[^\]]*\]\(([^)]+)\)/);
+          if (mdImg) rawBanner = mdImg[1].trim();
+          if (rawBanner) bannerUrl = rawBanner;
         }
-        
+
+        // color handling
+        let noteColor = null;
+        if (data.color) {
+          noteColor = String(data.color).trim().replace(/^['\"]|['\"]$/g, '')
+            .toLowerCase();
+          if (noteColor === 'default') noteColor = 'brown';
+        }
+
+        // No_upchar flag detection
+        if (data.no_upchar || /(?:^|\s)#?no_upchar\b/i.test(Object.keys(data).join('\n'))) {
+          hasNoUpChar = true;
+        }
+
         // Helper to resolve banner paths for posts (handles absolute, /paths, wiki/*, relative, data URIs)
         function resolveBannerForNote(bannerVal, notePath) {
           if (!bannerVal) return null;
@@ -273,39 +478,31 @@
           const banner = document.querySelector('.post-banner');
           const resolved = resolveBannerForNote(bannerUrl, path);
           if (resolved) {
-            banner.innerHTML = `<img src="${resolved}" alt="Cover image" style="width:100%;height:100%;object-fit:cover;display:block;" />`;
+            // Create an img element and fade it in when loaded to avoid sudden flashes
+            banner.innerHTML = '';
+            const img = document.createElement('img');
+            img.src = resolved;
+            img.alt = 'Cover image';
+            img.style.opacity = '0';
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            img.style.display = 'block';
+            img.addEventListener('load', () => {
+              // Use class + requestAnimationFrame to ensure paint and smooth transition
+              img.classList.add('loaded');
+              // show overlay/fade and any header reveal
+              banner.classList.add('banner-visible');
+              const header = document.querySelector('.post-header');
+              if (header) header.classList.remove('hidden');
+            });
+            banner.appendChild(img);
           }
         }
 
-        // Apply note color/theme to the page if present (set data-theme or custom --note-accent)
+        // Apply note color/theme using helper
         if (typeof noteColor !== 'undefined' && noteColor) {
-          const themeNames = ['brown','blue','red','green','sky','purple','pink','orange','yellow','teal'];
-          const page = document.querySelector('.post-page');
-          if (themeNames.includes(noteColor)) {
-            // Apply the named theme to the whole document so body-based theme rules apply
-            document.body.setAttribute('data-theme', noteColor);
-            page.style.setProperty('--note-accent', 'var(--accent)');
-            console.log('Post applied theme on body:', noteColor);
-          } else if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(noteColor)) {
-            page.style.setProperty('--note-accent', noteColor);
-            // subtle tint overlay on banner
-            const bannerEl = document.querySelector('.post-banner');
-            if (bannerEl) {
-              bannerEl.style.position = bannerEl.style.position || 'relative';
-              let tint = bannerEl.querySelector('.banner-tint');
-              if (!tint) {
-                tint = document.createElement('div');
-                tint.className = 'banner-tint';
-                Object.assign(tint.style, {position:'absolute', inset:'0', pointerEvents:'none'});
-                bannerEl.appendChild(tint);
-              }
-              tint.style.background = noteColor;
-              tint.style.opacity = '0.08';
-            }
-          } else {
-            // Unknown name: apply to body as a theme attempt (will only take effect if CSS theme exists)
-            document.body.setAttribute('data-theme', noteColor);
-          }
+          applyNoteTheme(noteColor);
         }
         
         // Parse and render markdown
@@ -349,7 +546,22 @@
         document.title = filename + " - My Notes";
         const displayTitle = hasNoUpChar && filename.length ? (filename.charAt(0).toLowerCase() + filename.slice(1)) : filename;
         document.getElementById('postTitle').textContent = displayTitle;
-        document.getElementById('postDate').textContent = "Note";
+        // Prefer frontmatter 'date' then 'publish_date', 'note_modified', 'note_created' for the post date
+        let displayDate = null;
+        ['date', 'publish_date', 'note_modified', 'note_created'].some(k => {
+          if (data[k]) { displayDate = data[k]; return true; }
+          return false;
+        });
+        if (displayDate) {
+          const parsed = new Date(displayDate);
+          if (!isNaN(parsed.valueOf())) {
+            const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+            displayDate = `${months[parsed.getMonth()]} ${String(parsed.getDate()).padStart(2,'0')}, ${parsed.getFullYear()}`;
+          }
+          document.getElementById('postDate').textContent = displayDate;
+        } else {
+          document.getElementById('postDate').textContent = "Note";
+        }
 
         // Display as formatted markdown HTML
         const postBody = document.getElementById('postContent');
@@ -366,9 +578,31 @@
           }
           if (accent) {
             postBody.style.setProperty('--note-accent', accent);
-            const headerH1 = document.querySelector('.post-header h1');
-            if (headerH1) headerH1.style.color = accent;
+            const page = document.querySelector('.post-page');
+            if (page) {
+              page.style.borderLeftColor = accent;
+              page.style.borderRightColor = accent;
+              const header = page.querySelector('.post-header');
+              if (header) header.style.borderBottomColor = accent;
+            }
           }
+          // Text color handling: use frontmatter `text` field if present, otherwise default to black
+          let textColor = (data.text || 'black').trim();
+          if (!isValidCssColor(textColor)) {
+            if (THEMES[textColor]) textColor = THEMES[textColor];
+            else textColor = 'black';
+          }
+          // Ensure good contrast: compute luminance of chosen text color; if it's very light, fallback to black
+          try {
+            const rgbStr = cssColorToRgb(textColor);
+            if (rgbStr) {
+              const parts = rgbStr.split(',').map(n => parseInt(n.trim(),10)/255);
+              const linear = parts.map(c => (c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4)));
+              const lum = 0.2126*linear[0] + 0.7152*linear[1] + 0.0722*linear[2];
+              if (lum > 0.86) textColor = '#000000';
+            }
+          } catch(e) {}
+          postBody.style.color = textColor;
         } catch(e) {}
         // Add dropcap class to first paragraph only if the No_upchar flag is NOT present
         const firstP = postBody.querySelector('p');

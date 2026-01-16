@@ -1,6 +1,8 @@
 ---
 banner : https://i.ytimg.com/vi/RwvCKetYXwI/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLDooZfBfB6O1VkrvrcCxHIswOYkTg
 tags: #youtube #No_upchar 
+date : 2024-01-18
+text : white
 title: The Entire FNAF Timeline
 youtube_url: https://static.wikia.nocookie.net/freddy-fazbears-pizza/images/d/da/FNaF1.jpg/revision/latest/scale-to-width-down/1200?cb=20230410020858
 channel_name: FuhNaff

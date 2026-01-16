@@ -4,7 +4,99 @@
 	--primary: #24221b;
 	--secondary: #e4dcc9;
 	--accent: #FF6B6B;
+	--theme-color: var(--accent); /* default theme color for notes */
+	/* RGB triplet used for subtle theme tints (set by JS when a note theme is applied) */
+	--theme-rgb: 36, 34, 27; /* default to brown */
 }
+/* Theme is applied to backgrounds, borders, and accents — text colors remain unchanged */
+.post-header h1 { color: var(--primary); }
+.post-body a { color: inherit; }
+.post-body h2,
+.post-body h3 { color: inherit; }
+body { transition: background-color 300ms ease, color 300ms ease; }
+
+/* Apply the theme color solidly to the whole page when a note is active (no gradients)
+   --theme-bg: a soft, light background color derived from the accent
+   --theme-color: the stronger accent used for buttons/lines */
+body.note-theme, html.note-theme {
+  background-image: none !important;
+  background: var(--theme-bg, var(--theme-color)) !important;
+  background-color: var(--theme-bg, var(--theme-color)) !important;
+  color: var(--theme-text, var(--cream)) !important; /* ensure readable text on colored background */
+}
+
+/* Post-scoped theming (uses CSS variables set by JS)
+   These rules apply only to the post page so the rest of the site is unaffected */
+.post-page {
+  border-left-color: var(--theme-color);
+  border-right-color: var(--theme-color);
+  /* Use the RGB triplet for a subtle background tint */
+  background: linear-gradient(180deg, rgba(var(--theme-rgb), 0.12) 0%, var(--cream) 100%);
+}
+.post-header {
+  background: rgba(var(--theme-rgb), 0.06);
+  border-bottom-color: var(--theme-color);
+  position: relative; /* allow decorative bars */
+  padding-top: 28px;
+  padding-bottom: 28px;
+}
+
+/* Remove any decorative shadows/ backgrounds from the title */
+.post-header h1,
+.post-header h1 * {
+  text-shadow: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  -webkit-text-stroke: 0 !important; /* ensure no stroke */
+  filter: none !important; /* remove filter effects */
+}
+
+/* Decorative horizontal accent bars above and below the title - match vertical homepage accents */
+.post-header::before,
+.post-header::after {
+  content: "";
+  position: absolute;
+  left: 0; /* span the full width of the header (which is centered and constrained) */
+  right: 0;
+  height: 3px; /* match vertical border thickness */
+  background: var(--theme-color);
+  border-radius: 3px; /* slight rounding to match vertical corners */
+  z-index: 10;
+  transition: none !important;
+}
+/* disable the top bar */
+.post-header::before { display: none !important; }
+.post-header::after  { bottom: 10px; }
+
+/* Slightly thinner bars on small screens */
+@media (max-width:600px){
+  .post-header::after { height: 2px; }
+} 
+.post-banner {
+  /* make banner feel cohesive by using a tint overlay driven by the theme color */
+  background: linear-gradient(135deg, rgba(var(--theme-rgb), 0.14) 0%, rgba(var(--theme-rgb), 0.08) 100%);
+}
+.post-banner::after {
+  background: linear-gradient(to bottom, transparent, rgba(var(--theme-rgb), 0.08));
+}
+.post-body {
+  background: linear-gradient(180deg, rgba(var(--theme-rgb), 0.06) 0%, var(--cream) 100%);
+}
+
+/* Buttons, controls, and other decorative accents inside the post should use the theme color */
+.post-page .back-btn,
+.post-page .btn,
+.post-page #goTopBtn {
+  background: var(--theme-color);
+  border-color: var(--theme-color);
+  color: var(--cream);
+}
+.post-page .back-btn:hover,
+.post-page .btn:hover {
+  background: rgba(255,255,255,0.92);
+  color: var(--theme-color);
+  border-color: var(--theme-color);
+} 
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -13,6 +105,7 @@ body {
 	height: 100%;
 	margin: 1em;
 	align-items: center;
+	/* Keep homepage default background — note theming only applies when `.note-theme` is present */
 	background-color: var(--cream);
 	font-family: "IBM Plex Mono", monospace;
 	font-size: 20px;
@@ -161,7 +254,10 @@ body::-webkit-scrollbar {
 
 /* Cards */
 .cards { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 28px; width: 100%; }
-.card { background: white; border: 3px solid var(--brown); padding: 0; border-radius: 10px; display:flex; flex-direction:column; gap:12px; min-height:160px; position: relative; overflow: hidden; flex: 1 1 calc(33.333% - 12px); max-width: calc(33.333% - 12px); }
+	.card { background: var(--note-bg, white); border: 3px solid var(--note-accent, var(--brown)); padding: 0; border-radius: 10px; display:flex; flex-direction:column; gap:12px; min-height:160px; position: relative; overflow: hidden; flex: 1 1 calc(33.333% - 12px); max-width: calc(33.333% - 12px); }
+	.card .card-title { color: var(--note-accent, var(--brown)); }
+	.card .btn { background: var(--note-accent, var(--brown)); color: var(--cream); border: 3px solid var(--note-accent, var(--brown)); }
+	.card .btn:hover { background: var(--cream); color: var(--note-accent, var(--brown)); border-color: var(--note-accent, var(--brown)); }
 .card-image { width: 100%; height: 140px; background: linear-gradient(135deg, #d4c5b9 0%, #a89f99 100%); display: flex; align-items: center; justify-content: center; color: rgba(36,34,27,0.5); font-size: 0.9rem; }
 .card-date { text-align: right; font-size: 0.75rem; color: rgba(36,34,27,0.6); letter-spacing: 0.5px; }
 .card-title { font-size: 1rem; font-weight:900; padding: 0 18px; margin-top: 6px; }
@@ -206,9 +302,10 @@ body::-webkit-scrollbar {
   /* Note-aware content accent color (set via --note-accent on the .post-body element).
      Accepts a hex value or a theme-derived accent. Defaults to var(--primary). */
   .post-body { --note-accent: var(--primary); }
-  .post-body a { color: var(--note-accent); }
+  /* Keep text colors inherited; use --note-accent for decorative borders only */
+  .post-body a { color: inherit; }
   .post-body h2,
-  .post-body h3 { color: var(--note-accent); }
+  .post-body h3 { color: inherit; }
   .post-body blockquote { border-left: 4px solid var(--note-accent); padding-left: 12px; color: rgba(0,0,0,0.85); }
 
 .btn { display:inline-block; border-radius:50px; background: var(--brown); color: var(--cream); text-decoration:none; padding:6px 12px; font-weight:700; letter-spacing:1px; align-self:flex-end; margin: 0 12px 12px 0; font-size: 14px; }
@@ -336,6 +433,143 @@ body[data-theme] .theme-toggle {
 .theme-toggle[aria-disabled="true"] {
   opacity: 0.5;
   pointer-events: none;
+}
+
+/* Disable transition/fade for theme toggle so opacity changes are immediate */
+.theme-toggle {
+  transition: none !important;
+}
+
+/* Utility to temporarily suppress all transitions & animations (used while disabling theme toggle)
+   - includes pseudo-elements (::before/::after) and applies to html/:root to catch global rules */
+html.no-transitions,
+:root.no-transitions,
+body.no-transitions,
+body.no-transitions *,
+body.no-transitions *::before,
+body.no-transitions *::after,
+html.no-transitions *,
+html.no-transitions *::before,
+html.no-transitions *::after {
+  transition: none !important;
+  animation: none !important;
+} 
+
+/* When a note theme is active, show a soft theme background and use a contrasting accent for buttons/lines */
+.note-theme .post-page,
+.note-theme .post-banner,
+.note-theme .post-header,
+.note-theme .site-header,
+.note-theme .site-footer,
+.note-theme .container {
+  background-image: none !important;
+  background: transparent !important; /* let the page background (--theme-bg) be visible */
+  color: var(--theme-text, var(--cream)) !important;
+}
+
+/* Make header and content match the note's page background for a seamless theme
+   Remove surrounding box around header so only decoration (bars) remain */
+.note-theme .post-header,
+.note-theme .post-body {
+  background: var(--theme-bg, var(--theme-color)) !important;
+  color: var(--theme-text, var(--brown)) !important;
+  max-width: 900px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  border-radius: 0 !important; /* remove rounding */
+  box-shadow: none !important;
+  padding: 12px 36px !important; /* tighter padding for header */
+  border: none !important; /* remove subtle border */
+}
+
+/* Remove the header box style so only the horizontal bars and title remain */
+.note-theme .post-header {
+  margin-top: 12px !important;
+  margin-bottom: 8px !important;
+  background: transparent !important;
+  border-bottom: none !important; /* remove extra line */
+}
+
+/* Add spacing around the title: margin outside and padding inside to increase top/bottom space */
+.note-theme .post-header h1 {
+  margin-top: 18px !important;
+  margin-bottom: 18px !important;
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+  line-height: 1.12 !important;
+}
+
+/* Slightly smaller spacing on narrow screens */
+@media (max-width:600px) {
+  .note-theme .post-header h1 {
+    margin-top: 12px !important;
+    margin-bottom: 12px !important;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+  }
+}
+
+/* Keep body content with slightly more spacing */
+.note-theme .post-body {
+  padding: 28px 48px !important;
+}
+
+/* Remove banner overlay and any gradient pseudo-elements */
+.note-theme .post-banner::after,
+.note-theme .post-banner::before,
+.note-theme .post-page::before,
+.note-theme .post-page::after {
+  display: none !important;
+  background: none !important;
+}
+
+/* Banner image fade-in on load */
+.post-banner {
+  position: relative; /* contains overlay */
+  overflow: hidden;
+}
+.post-banner img {
+  opacity: 0;
+  transition: opacity 420ms cubic-bezier(.2,.9,.2,1);
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.post-banner img.loaded { opacity: 1 !important; }
+
+/* Theme-aware overlay that fades in with the banner image (creates the "fade into content" look) */
+.post-banner::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 40%; /* overlay covers lower 40% of banner */
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 100%);
+  opacity: 0;
+  transition: opacity 420ms cubic-bezier(.2,.9,.2,1);
+  pointer-events: none;
+}
+/* Use theme tint if available (softens to theme color instead of black) */
+.note-theme .post-banner::after {
+  background: linear-gradient(to bottom, rgba(var(--theme-rgb), 0) 0%, rgba(var(--theme-rgb), 0.4) 100%);
+}
+
+/* When banner-visible is added, show overlay */
+.post-banner.banner-visible::after { opacity: 1 !important; }
+
+/* Optional: make the header text fade up slightly when banner appears */
+.post-header { transform: translateY(0); transition: transform 360ms ease, opacity 360ms ease; }
+.post-header.hidden { transform: translateY(6px); opacity: 0; }
+.post-banner.banner-visible + .post-header.hidden { transform: translateY(0); opacity: 1; }
+ 
+
+/* Also suppress background-image rules within the post page so embedded blocks don't inherit gradients */
+.note-theme .post-page *,
+.note-theme .post-page *::before,
+.note-theme .post-page *::after {
+  background-image: none !important;
 }
 
 body[data-theme] .github-link {

@@ -374,6 +374,66 @@
             }
             // Render tags as badges
             const card = bannerElement.closest('.card');
+
+            // If the note frontmatter included a color, compute & apply a usable accent and subtle bg tint
+            if (card && typeof noteColor !== 'undefined' && noteColor) {
+              const themeNames = ['brown','blue','red','green','sky','purple','pink','orange','yellow','teal'];
+              if (themeNames.includes(noteColor)) {
+                // Temporarily set theme to card so CSS variables resolve, then read --accent
+                card.setAttribute('data-theme', noteColor);
+                const computedAccent = getComputedStyle(card).getPropertyValue('--accent').trim() || null;
+                if (computedAccent) {
+                  card.style.setProperty('--note-accent', computedAccent);
+                  card.style.setProperty('--note-bg', hexToRgba(computedAccent, 0.04));
+                  card.style.borderColor = computedAccent;
+                  // Force-apply inline colors as fallback so visuals always update
+                  try {
+                    // stronger visual fallbacks
+                    card.style.backgroundColor = hexToRgba(computedAccent, 0.08);
+                    card.style.borderWidth = '4px';
+                    const titleEl = card.querySelector('.card-title');
+                    if (titleEl) { titleEl.style.color = computedAccent; titleEl.style.fontWeight = '900'; titleEl.style.fontSize = '1.05rem'; }
+                    const btnEl = card.querySelector('.btn');
+                    if (btnEl) { btnEl.style.background = computedAccent; btnEl.style.borderColor = computedAccent; btnEl.style.color = getComputedStyle(document.body).getPropertyValue('--cream') || '#fff'; }
+                    const fadeDiv = card.querySelector('.tags-fade');
+                    if (fadeDiv) fadeDiv.style.background = `linear-gradient(to right, transparent, ${computedAccent} 90%)`;
+                  } catch (e) {}
+                  console.log('Applied card theme:', noteColor, 'accent:', computedAccent);
+                  console.log('Computed on card: --note-accent=', getComputedStyle(card).getPropertyValue('--note-accent'), '--note-bg=', getComputedStyle(card).getPropertyValue('--note-bg'), 'border-color=', getComputedStyle(card).getPropertyValue('border-color'));
+                } else {
+                  console.log('Theme applied but computed accent not found for theme:', noteColor);
+                }
+              } else if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(noteColor)) {
+                const accentHex = noteColor;
+                card.style.setProperty('--note-accent', accentHex);
+                card.style.setProperty('--note-bg', hexToRgba(accentHex, 0.08));
+                card.style.borderColor = accentHex;
+                // Force-apply stronger inline fallback colors
+                try {
+                  card.style.backgroundColor = hexToRgba(accentHex, 0.12);
+                  card.style.borderWidth = '4px';
+                  const titleEl = card.querySelector('.card-title');
+                  if (titleEl) { titleEl.style.color = accentHex; titleEl.style.fontWeight = '900'; titleEl.style.fontSize = '1.05rem'; }
+                  const btnEl = card.querySelector('.btn');
+                  if (btnEl) { btnEl.style.background = accentHex; btnEl.style.borderColor = accentHex; btnEl.style.color = getComputedStyle(document.body).getPropertyValue('--cream') || '#fff'; }
+                  const fadeDiv = card.querySelector('.tags-fade');
+                  if (fadeDiv) fadeDiv.style.background = `linear-gradient(to right, transparent, ${accentHex} 90%)`;
+                } catch (e) {}
+                try {
+                  bannerElement.style.position = bannerElement.style.position || 'relative';
+                  let tint = bannerElement.querySelector('.banner-tint');
+                  if (!tint) {
+                    tint = document.createElement('div');
+                    tint.className = 'banner-tint';
+                    Object.assign(tint.style, {position:'absolute', inset:'0', borderRadius:'inherit', pointerEvents:'none'});
+                    bannerElement.appendChild(tint);
+                  }
+                  tint.style.background = accentHex;
+                  tint.style.opacity = '0.08';
+                } catch (e) {}
+              }
+            }
+
             if (card && tags.length) {
               const tagsDiv = card.querySelector('.note-tags');
               const fadeDiv = card.querySelector('.tags-fade');

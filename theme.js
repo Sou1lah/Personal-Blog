@@ -8,7 +8,10 @@ function setThemeToggleEnabled(enabled) {
   themeToggle.setAttribute('aria-disabled', (!enabled).toString());
   themeToggle.style.opacity = enabled ? '' : '0.5';
   themeToggle.style.pointerEvents = enabled ? '' : 'none';
-}
+  // Temporarily suppress transitions/animations site-wide while theme toggle is disabled
+  document.body.classList.toggle('no-transitions', !enabled);
+  document.documentElement.classList.toggle('no-transitions', !enabled);
+} 
 // Expose helper globally so other scripts (like the reload handler) can call it
 window.setThemeToggleEnabled = setThemeToggleEnabled;
 
@@ -30,7 +33,20 @@ if (themeToggle) {
 }
 
 function setTheme(theme) {
+  // Temporarily suppress transitions/animations so the theme applies instantly
+  document.body.classList.add('no-transitions');
+  document.documentElement.classList.add('no-transitions');
+
+  // Apply the theme (updates CSS variables / colors)
   document.body.setAttribute('data-theme', theme);
-}
+
+  // Remove the suppression on the next paint so normal transitions return
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      document.body.classList.remove('no-transitions');
+      document.documentElement.classList.remove('no-transitions');
+    });
+  });
+} 
 // Expose setTheme for debugging/testing
 window.setTheme = setTheme;
