@@ -202,3 +202,20 @@ main {
   src: local('Arial'), local('Helvetica');
   font-weight: normal;
 }
+
+.vertical-line {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #000;
+  z-index: 1;
+}
+
+.vertical-line.left {
+  left: 0;
+}
+
+.vertical-line.right {
+  right: 0;
+}

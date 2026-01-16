@@ -88,7 +88,7 @@ date : 2024-06-15
 
 ## Habitat
 
-<div class="responsive-columns">
+<div data-twocol>
   <div class="column-left">
     <p>
       <strong>Circumpolar Arctic distribution:</strong> found throughout the Arctic and subarctic regions of Canada, Alaska (USA), Russia, Greenland, and Norway. Polar bears are <strong>sea-ice dependent</strong> – they spend most of their lives on Arctic sea ice hunting seals from ice and only come to land for denning or when the ice melts.
@@ -102,7 +102,7 @@ date : 2024-06-15
 
 ## Physical Traits
 
-<div class="responsive-columns">
+<div data-twocol>
   <div class="column-left">
     <p>
       <strong>Fur & Insulation:</strong> Double-layered coat – dense, transparent underfur plus long guard hairs over thick blubber. The fur appears white but is actually pigment-free and clear with black skin underneath that absorbs heat.
@@ -114,9 +114,9 @@ date : 2024-06-15
   </div>
 </div>
 
-<div class="responsive-columns">
+<div data-twocol>
   <div class="column-left">
-    <img src="../assets/ polarclaws.jpg" alt="Polar Bear Claws">
+    <img src="../assets/polarclaws.jpg" alt="Polar Bear Claws">
   </div>
   <div class="column-spacer"></div>
   <div class="column-right">
@@ -126,7 +126,7 @@ date : 2024-06-15
   </div>
 </div>
 
-<div class="responsive-columns">
+<div data-twocol>
   <div class="column-left">
     <p>
       <strong>Head & Teeth:</strong> Slender head and long neck with a narrower skull and sloping "Roman" nose. Powerful jaws have large canine teeth for grasping seals and sharp cheek teeth for shearing meat.
@@ -154,7 +154,7 @@ date : 2024-06-15
 
 ## Reproduction & Lifespan
 
-<div class="responsive-columns">
+<div data-twocol>
   <div class="column-left">
     <img src="../assets/polarbearden.jpg" alt="Polar Bear Fur">
   </div>

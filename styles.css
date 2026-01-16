@@ -13,7 +13,7 @@
 .post-body a { color: inherit; }
 .post-body h2,
 .post-body h3 { color: inherit; }
-body { transition: background-color 300ms ease, color 300ms ease; }
+body { transition: background-color 300ms ease, color 300ms ease; font-family: 'Buda', cursive; }
 
 /* Apply the theme color solidly to the whole page when a note is active (no gradients)
    --theme-bg: a soft, light background color derived from the accent
@@ -30,8 +30,70 @@ body.note-theme, html.note-theme {
 .post-page {
   border-left-color: var(--theme-color);
   border-right-color: var(--theme-color);
+  /* Make the post page full-width and allow it to stretch within the layout */
+  align-self: stretch;
+  width: 100%;
+  max-width: none;
+  /* remove body gutters by offsetting the page to the viewport edges */
+  margin: 0 -1em;
+  padding: 0 1em;
+  box-sizing: border-box;
   /* Use the RGB triplet for a subtle background tint */
   background: linear-gradient(180deg, rgba(var(--theme-rgb), 0.12) 0%, var(--cream) 100%);
+}
+
+/* Make the post content use the available width (no inner max-width) */
+.post-page .post-body {
+  padding-left: 0;
+  padding-right: 0;
+  max-width: none;
+}
+
+/* Responsive adjustments to match body margins on narrow screens and remove vertical borders on phones */
+@media (max-width:800px) {
+  /* Force full-bleed layout on small/phone viewports (<=800px). Uses !important to override inline page styles. */
+  body { margin: 0 !important; align-items: stretch !important; width: 100% !important; }
+  html, body { width: 100% !important; }
+  .container { width: 100% !important; padding: 0 !important; border-left: none !important; border-right: none !important; border-bottom: none !important; margin: 0 !important; }
+  .site-header { width: 100% !important; padding: 0px 0px !important; border-left: none !important; border-right: none !important; border-bottom: none !important; margin: 0 !important; }
+  .post-page,
+  .note-theme .post-page,
+  .note-theme .post-header,
+  .post-header,
+  .post-banner,
+  .post-body {
+    border-left: none !important;
+    border-right: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    left: 0 !important;
+    right: 0 !important;
+  }
+  /* Reduce left padding even more as requested */
+  .post-body { padding-left: 0px !important; padding-right: 0px !important; }
+  .post-header { padding-left: 0px !important; padding-right: 0px !important; }
+  /* remove any centered alignment that could constrain width */
+  .post-page { align-self: stretch !important; display: block !important; box-sizing: border-box !important; }
+
+  /* Reduce vertical whitespace above post content */
+  .post-page { padding-top: 0 !important; margin-top: 0 !important; }
+  .post-banner { height: 100px !important; min-height: 0 !important; }
+  .post-header { padding-top: 4px !important; padding-bottom: 6px !important; margin-top: 0 !important; }
+  .note-theme .post-header { margin-top: 0 !important; padding-top: 4px !important; }
+}
+
+/* Ensure very small screens are fully edge-to-edge */
+@media (max-width:420px) {
+  .post-body { padding-left: 0 !important; padding-right: 0 !important; }
+  .post-header { padding-left: 0 !important; padding-right: 0 !important; }
+}
+@media (max-width:420px) {
+  /* On very small screens keep the post truly edge-to-edge */
+  body { margin: 0; }
+  .post-page { margin: 0; padding: 0; }
+  .post-page .post-body { padding-left: 0; padding-right: 0; }
 }
 .post-header {
   background: rgba(var(--theme-rgb), 0.06);
@@ -415,26 +477,6 @@ body::-webkit-scrollbar {
 	--accent: #14b8a6;
 }
 
-/* New: black & white theme (high contrast) */
-[data-theme="black-white"] {
-	--primary: #000000;
-	--secondary: #ffffff;
-	--accent: #111111;
-	--theme-bg: #ffffff;
-	--theme-text: #000000;
-	--theme-rgb: 0,0,0;
-}
-
-/* New: sepia (warm yellowish) theme */
-[data-theme="sepia"] {
-	--primary: #4b2e1a;
-	--secondary: #f5e9d6;
-	--accent: #b8860b;
-	--theme-bg: #f5e9d6;
-	--theme-text: #3b2413;
-	--theme-rgb: 184,134,11;
-}
-
 body[data-theme] {
 	background-color: var(--secondary);
 	color: var(--primary);
@@ -503,9 +545,9 @@ html.no-transitions *::after {
 .note-theme .post-body {
   background: var(--theme-bg, var(--theme-color)) !important;
   color: var(--theme-text, var(--brown)) !important;
-  max-width: 900px !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
   border-radius: 0 !important; /* remove rounding */
   box-shadow: none !important;
   padding: 12px 36px !important; /* tighter padding for header */
@@ -648,8 +690,27 @@ body[data-theme] .card-image {
 
 @media (max-width:420px){
   body { margin: 0; }
-  .container { width: 100%; padding: 12px; }
-  .site-header { width: 100%; padding: 12px; }
+  /* Remove gutters and decorative borders on very small screens so the content is truly edge-to-edge */
+  .container { width: 100%; padding: 0; border-left: none !important; border-right: none !important; border-bottom: none !important; }
+  .site-header { width: 100%; padding: 12px; border-left: none !important; border-right: none !important; border-bottom: none !important; }
+  /* Ensure the post page and themed post page have no vertical borders and use the full viewport width */
+  .post-page,
+  .note-theme .post-page,
+  .note-theme .post-header,
+  .post-header,
+  .post-banner,
+  .post-body {
+    border-left: none !important;
+    border-right: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  /* Make the content actually full-bleed. If you prefer a small inner gutter, change padding here. */
+  .post-body { padding-left: 0 !important; padding-right: 0 !important; }
+
   .site-title { font-size: 0.9rem; padding: 6px 12px; }
   .github-link { padding: 4px 8px; }
   .github-link svg { width: 24px; height: 24px; }
@@ -659,4 +720,21 @@ body[data-theme] .card-image {
   .card-title { font-size: 1.1rem; font-weight:900; padding: 0 12px; margin-top: 10px; }
   .card-excerpt { font-size: 0.80rem; padding: 0 12px; }
   .btn { font-size: 16px; padding: 10px 16px; margin: 8px 12px 12px 0; }
+}
+
+.vertical-line {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #000;
+  z-index: 1;
+}
+
+.vertical-line.left {
+  left: 0;
+}
+
+.vertical-line.right {
+  right: 0;
 }

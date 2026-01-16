@@ -1,0 +1,196 @@
+    .post-page {
+      max-width: 950px;
+      overflow: hidden;
+      margin: 0 auto;
+      padding: 0;
+      border-left: 3px solid var(--brown);
+      border-right: 3px solid var(--brown);
+      min-height: 100vh;
+      /* subtle, lighter gradient so the full-viewport tint remains visible */
+      background: linear-gradient(180deg, rgba(var(--theme-rgb), 0.04) 0%, rgba(var(--theme-rgb), 0.02) 40%, var(--cream) 100%);
+      position: relative;
+    }
+
+    .post-banner {
+      height: 180px;
+      transition: height 0.28s ease;
+      /* banner gradient mixes theme color with existing banner tones for cohesion */
+      background: linear-gradient(135deg, rgba(var(--theme-rgb), 0.14) 0%, rgba(var(--theme-rgb), 0.08) 100%), url('https://raw.githubusercontent.com/Sou1lah/Personal-Blog/main/assets/ImagePlaceholder.jpg');
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .post-banner.banner-visible {
+      height: 300px;
+    }
+
+    .post-banner::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 80px;
+      /* use theme-aware tint for the banner fade */
+      background: linear-gradient(to bottom, transparent, rgba(var(--theme-rgb), 0.06));
+      pointer-events: none;
+    }
+
+    .post-header {
+      margin-bottom: 0; /* remove space after header so content starts at the border */
+      padding: 12px 40px 6px 40px; /* compact header padding */
+      border-bottom: 3px solid var(--brown);
+    }
+
+    .post-meta {
+      font-weight: 400;
+    }
+
+    .post-header h1 {
+      font-size: 2rem;
+      margin: 0 0 10px 0;
+    }
+
+    .post-body {
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: var(--brown);
+      white-space: pre-wrap;
+      padding: 0px 10px 10px 10px;
+      /* content uses a soft theme gradient for a tasteful accent */
+      background: linear-gradient(180deg, rgba(var(--theme-rgb), 0.06) 0%, var(--cream) 100%);
+      border-top: 1px solid rgba(0,0,0,0.06);
+    }
+    /* Ensure the first content element doesn't add extra top spacing */
+    .post-body > :first-child { margin-top: 0; }
+
+    .post-body:not(.no-upchar) .dropcap::first-letter {
+      font-size: 3.5rem;
+      font-weight: 700;
+      float: left;
+      line-height: 2.5rem;
+      padding-right: 8px;
+      padding-top: 6px;
+    }
+
+    .back-btn {
+      display: inline-block;
+      padding: 8px 16px;
+      background: var(--brown);
+      color: var(--cream);
+      text-decoration: none;
+      border-radius: 50px;
+      border: 3px solid var(--brown);
+      font-weight: 700;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 20;
+    }
+
+    .back-btn:hover {
+      background: var(--cream);
+      color: var(--brown);
+    }
+
+    /* Loading skeletons */
+    .skeleton {
+      background: linear-gradient(90deg, rgba(0,0,0,0.06) 25%, rgba(255,255,255,0.6) 50%, rgba(0,0,0,0.06) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s linear infinite;
+      border-radius: 4px;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .skeleton-title {
+      height: 2.4rem;
+      width: 60%;
+      margin-top: 5px;
+      border-radius: 6px;
+    }
+    .skeleton-date {
+      display: inline-block;
+      height: 1rem;
+      width: 6rem;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-right: 8px;
+      opacity: 1;
+    }
+    .skeleton-image {
+      background-color: rgba(0,0,0,0.06);
+      background-image: linear-gradient(90deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.2) 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s linear infinite;
+      border-radius: 8px;
+      object-fit:cover;
+    }
+    .skeleton-hero-text .skeleton-line {
+      margin-bottom: 0px;
+      height: 14px;
+    }
+    .skeleton-content {
+      display: block;
+      margin-top: 0;
+    }
+    .skeleton-line {
+      height: 14px;
+      margin-bottom: 14px;
+      border-radius: 2px;
+      width: 100%;
+    }
+
+    /* While a post/note is loading, hide any per-note accent on the header */
+    .post-page.loading .post-header { border-bottom-color: transparent !important; }
+    .post-page.loading .post-header::after { display: none; }
+
+    /* Small responsive tweaks */
+    @media (max-width:600px) {
+      .skeleton-title { width: 80%; height: 2rem; }
+      .skeleton-hero { flex-direction: column; }
+      .skeleton-image { width: 100%; flex:0 0 auto; height:160px; }
+      /* Mobile: keep side gutters (borders) and let content fill the space between them */
+      .post-page {
+        max-width: 100%;
+        margin: 0;
+        box-sizing: border-box;
+        padding: 0 12px; /* inner gutter so borders remain visible */
+        border-left: 3px solid var(--brown);
+        border-right: 3px solid var(--brown);
+      }
+      .post-body {
+      }
+      .post-header {
+        padding: 12px 12px 6px 12px;
+      }
+      .back-btn { left: 16px; top: 12px; padding: 6px 12px; }
+      .post-banner.banner-visible { height: 200px; }
+    }
+
+    /* On very small screens make the post page edge-to-edge */
+    @media (max-width:420px) {
+      .post-page { max-width: 100%; margin: 0; padding: 0; box-sizing: border-box; border-left: none; border-right: none; border-bottom: none; border-radius: 0; }
+      .post-header { padding: 12px; border-bottom: none; }
+    }
+
+.vertical-line {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--brown);
+  z-index: 1;
+}
+
+.vertical-line.left {
+  left: 0;
+}
+
+.vertical-line.right {
+  right: 0;
+}
