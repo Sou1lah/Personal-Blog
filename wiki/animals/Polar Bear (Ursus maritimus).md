@@ -3,7 +3,7 @@ banner: https://media3.s-nbcnews.com/i/streams/2014/February/140225/2D11741327-1
 tags: animals, wiki
 color: blue
 date: 2024-06-15
-text: white
+text: black
 ---
 <figure style="display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap;">
   <div style="flex:1;min-width:200px;">
