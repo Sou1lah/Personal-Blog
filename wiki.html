@@ -207,10 +207,12 @@
       
       try {
         // Fetch the wiki directory structure
-        const response = await fetch(GITHUB_API, {
+        // Add cache-busting/no-store to API requests so directory listings reflect quick edits
+        const response = await fetch(GITHUB_API + '?t=' + Date.now(), {
           headers: {
             'Accept': 'application/vnd.github.v3+json'
-          }
+          },
+          cache: 'no-store'
         });
 
         if (!response.ok) {
@@ -225,10 +227,11 @@
         for (const item of files) {
           if (item.type === 'dir') {
             // Fetch subdirectory contents
-            const subResponse = await fetch(`${GITHUB_API}/${item.name}`, {
+            const subResponse = await fetch(`${GITHUB_API}/${item.name}?t=${Date.now()}`, {
               headers: {
                 'Accept': 'application/vnd.github.v3+json'
-              }
+              },
+              cache: 'no-store'
             });
             
             if (subResponse.ok) {
@@ -287,7 +290,8 @@
         for (const element of contentElements) {
           const rawUrl = element.getAttribute('data-raw-url');
           try {
-            const response = await fetch(rawUrl);
+            // Cache-bust so updated frontmatter is fetched immediately
+            const response = await fetch(rawUrl + '?t=' + Date.now(), { cache: 'no-store' });
             if (response.ok) {
               let markdown = await response.text();
 

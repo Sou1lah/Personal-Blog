@@ -436,7 +436,8 @@
     async function loadNoteContent(path) {
       try {
         const rawUrl = `${GITHUB_RAW}/${path}`;
-        const response = await fetch(rawUrl);
+        // Cache-bust note fetch so edits to frontmatter (e.g., `text:` or `color:`) appear immediately
+        const response = await fetch(rawUrl + '?t=' + Date.now(), { cache: 'no-store' });
         
         if (!response.ok) {
           throw new Error('Failed to load note');

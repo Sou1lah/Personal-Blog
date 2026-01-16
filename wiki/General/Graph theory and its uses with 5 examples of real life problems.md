@@ -1,7 +1,7 @@
 ---
 banner: https://upload.wikimedia.org/wikipedia/commons/e/e5/Bridges_of_Konigsberg.png
 tags: #graph-theory
-text: black
+text: white
 date : 2024-09-10
 title: Graph theory and its uses with 5 examples of real life problemsauthor:
   - "[[thanh.ha@inbold.com]]"
