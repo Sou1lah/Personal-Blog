@@ -325,14 +325,17 @@ body::-webkit-scrollbar {
 }
 
 /* Header */
-.site-header { width: 50%; margin: 0 auto; border-left: 3px solid var(--brown); border-right: 3px solid var(--brown); border-bottom: 3px solid var(--brown); display: flex; align-items: center; justify-content: space-between; padding: 16px; position: relative; margin-bottom: 12px; }
+/* Make the header span the full width of the surrounding .container and avoid duplicate borders
+   (header previously used a 50% width and replicated container borders which caused visual misalignment) */
+.site-header { width: 100%; margin: 0; border: none; display: flex; align-items: center; justify-content: space-between; padding: 16px 0; position: relative; margin-bottom: 12px; }
 .site-header::after {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
   height: 3px;
-  bottom: -12px; /* sits just below the header inside the container */
+  /* keep the decorative bar just below the header but avoid overlapping the container border */
+  bottom: -8px;
   background: var(--brown);
   border-radius: 3px;
   z-index: 1;

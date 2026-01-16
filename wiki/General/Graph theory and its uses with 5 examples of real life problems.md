@@ -12,7 +12,8 @@ cssclasses:
   - bg--lines
 color : default
 ---
-Machine Learning Engineering
+Machine Learning Engine    const GITHUB_API = 'https://api.github.com/repos/Sou1lah/Personal-Blog/contents/wiki';
+ering
 
 In the early 18-th century, there was a recreational mathematical puzzle called the Königsberg bridge problem. The solution of this problem, though simple, opened the world to a new field in mathematics called graph theory. In today’s world, graph theory has expanded beyond mathematics into our everyday life without us even noticing.
 
@@ -32,7 +33,7 @@ Superficially, the problem sounds simple to solve. Just try some paths and you w
 
 Firstly, he realized that it does not matter how you travel inside the city. The only important part to consider for the problem was the connections between the different landmasses. He drew dots to represent the landmasses and lines connecting these dots to represent the bridges (as seen in the picture below). The location of the dots and the shape of the lines are not relevant for the problem, only their relation. In the end, he had an abstraction of the problem with only dots and lines, which is now called a graph.
 
-<img src="https://xomnia.com/wp-content/uploads/2025/05/Konigsberg-bridges.png" alt="Konigsberg bridges illustration" style="max-width:300px; width:100%; height:auto; display:block; margin:auto;" />
+<img src="https://xomnia.com/wp-content/uploads/2025/05/Konigsberg-bridges.png" alt="Konigsberg bridges illustration" style="max-width:700px; width:100%; height:auto; display:block; margin:auto;" />
 
 Second, he thought that in order to walk through a landmass you need to enter through a bridge and exit from a different bridge. This means that the dot representing that landmass needs two lines connecting it to represent the enter and exit line. More generally, the dot can have any even number of lines as connections. This does not necessarily apply for two dots, which are the first and last landmass in the path. Those dots can have an odd number of lines connecting them since you could only exit the first dot and only enter the last dot. From counting the lines connecting each dot of the Königsberg bridge problem, one can see that all of the landmasses have an odd number of connections. This proves that it is impossible to make a path that crosses through all bridges.
 
