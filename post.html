@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Blog Post</title>
-  <link href="https://fonts.googleapis.com/css2?family=Buda:wght@300&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <link rel="stylesheet" href="post.css">
@@ -12,14 +12,17 @@
 <body>
   <div class="post-page">
     <div class="post-banner"><img class="banner-img" src="https://raw.githubusercontent.com/Sou1lah/Personal-Blog/main/assets/ImagePlaceholder.jpg" alt="Banner"></div>
+    <button class="back-btn" id="backBtn" aria-label="Go back" title="Back">←</button>
     <header class="post-header">
       <h1 id="postTitle">Post Title</h1>
       <div class="post-meta">
         <p id="postDate">Date</p>
+        <br>
       </div>
     </header>
     <div id="postContent" class="post-body" style="display:none;"></div>
   </div>
+  <button id="goTopBtn" aria-label="Go to top" title="Go to top">↑</button>
   <div id="imgZoomOverlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);z-index:3000;align-items:center;justify-content:center;cursor:zoom-out;"></div>
   <script src="post.js"></script>
 </body>

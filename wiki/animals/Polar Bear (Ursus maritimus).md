@@ -86,7 +86,7 @@ date : 2024-06-15
   </div>
 </div>
 
-## Habitat
+## 󰫢 Habitat
 
 <div data-twocol>
   <div class="column-left">

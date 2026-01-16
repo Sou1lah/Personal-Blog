@@ -31,15 +31,31 @@
         // Go to Top button logic
         const goTopBtn = document.getElementById('goTopBtn');
         window.addEventListener('scroll', () => {
+          if (!goTopBtn) return;
           if (window.scrollY > 200) {
             goTopBtn.style.display = 'block';
           } else {
             goTopBtn.style.display = 'none';
           }
         });
-        goTopBtn && goTopBtn.addEventListener('click', () => {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
+        if (goTopBtn) {
+          goTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+        }
+        // Back button logic (history.back with fallback)
+        const backBtn = document.querySelector('.back-btn');
+        if (backBtn) {
+          backBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            try {
+              if (document.referrer && document.referrer !== window.location.href) history.back();
+              else window.location.href = 'index.html';
+            } catch (err) {
+              window.location.href = 'index.html';
+            }
+          });
+        }
     const GITHUB_RAW = 'https://raw.githubusercontent.com/Sou1lah/Personal-Blog/main';
     
     // Small front-matter parser and theme helper

@@ -71,19 +71,48 @@
     }
 
     .post-header h1 {
-      font-size: 2rem;
+      font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+      font-size: 2.4rem;
       margin: 0 0 10px 0;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
     }
 
     .post-body {
-      font-size: 1.05rem;
-      line-height: 1.8;
+      /* Use Playfair Display for the entire note content to match the title's elegant style */
+      font-family: 'Playfair Display', Georgia, 'Times New Roman', serif !important;
+      font-weight: 500 !important; /* stronger body weight for a bolder look */
+      font-size: 1.06rem;
+      line-height: 1.85;
       color: var(--brown);
       white-space: pre-wrap;
       padding: 0px 10px 10px 10px;
       /* content uses a soft theme gradient for a tasteful accent */
       background: linear-gradient(180deg, rgba(var(--theme-rgb), 0.06) 0%, var(--cream) 100%);
       border-top: 1px solid rgba(0,0,0,0.06);
+      /* subtle double text-shadow to increase perceived stroke weight */
+      text-shadow: 0.3px 0 0 currentColor, -0.3px 0 0 currentColor;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Force Playfair for all elements inside post content */
+    .post-body, .post-body * {
+      font-family: 'Playfair Display', Georgia, 'Times New Roman', serif !important;
+    }
+
+    /* Keep headings heavier and tighter */
+    .post-body h1, .post-body h2, .post-body h3, .post-body h4, .post-body h5, .post-body h6 {
+      font-weight: 700 !important;
+      letter-spacing: -0.02em !important;
+      margin-top: 1.2em;
+      margin-bottom: 0.5em;
+    }
+
+    /* Preserve monospace for code blocks and inline code */
+    .post-body pre, .post-body code, .post-body kbd {
+      font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Helvetica Neue', monospace !important;
+      font-size: 0.95rem;
     }
     /* Ensure the first content element doesn't add extra top spacing */
     .post-body > :first-child { margin-top: 0; }
@@ -117,6 +146,111 @@
     .back-btn:hover {
       background: var(--cream);
       color: var(--brown);
+    }
+
+    /* Floating go-to-top button */
+    #goTopBtn {
+      display: none;
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 1000;
+      width: 48px;
+      height: 48px;
+      padding: 0;
+      background: #000;
+      color: #fff;
+      border-radius: 50%;
+      border: 3px solid #000;
+      font-weight: 900;
+      font-size: 22px; /* bigger arrow */
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.18s ease, opacity 0.18s ease, background 120ms ease;
+      box-shadow: 0 6px 22px rgba(0,0,0,0.18);
+      /* subtle multi-offset text-shadow to make the glyph appear thicker */
+      text-shadow: 0.5px 0 0 currentColor, -0.5px 0 0 currentColor, 0 0.6px 0 currentColor;
+    }
+    #goTopBtn:hover { transform: translateY(-4px); opacity: 0.98; background: #111; }
+
+    /* subtle hover label above the button */
+    #goTopBtn::after {
+      content: 'Top';
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 8px);
+      transform: translateX(-50%) translateY(6px);
+      opacity: 0;
+      background: #000;
+      color: #fff;
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      white-space: nowrap;
+      transition: opacity 160ms ease, transform 160ms ease;
+      pointer-events: none;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+    }
+    #goTopBtn:hover::after { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width:600px) {
+      #goTopBtn { right: 16px; bottom: 16px; width: 44px; height: 44px; font-size: 20px; }
+      /* hide hover labels on small screens to avoid overlap */
+      #goTopBtn::after { display: none; }
+    } 
+
+    /* Back button refined */
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 20;
+      width: 48px;
+      height: 48px;
+      padding: 0;
+      background: #000;
+      color: #fff;
+      border-radius: 50%;
+      border: 3px solid #000;
+      font-weight: 900;
+      font-size: 22px; /* bigger arrow */
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 120ms ease;
+      box-shadow: 0 6px 22px rgba(0,0,0,0.16);
+      text-shadow: 0.5px 0 0 currentColor, -0.5px 0 0 currentColor, 0 0.6px 0 currentColor;
+    }
+    .back-btn:hover { transform: translateY(-2px); background: #111; }
+
+    .back-btn::after {
+      content: 'Back';
+      position: absolute;
+      left: calc(100% + 10px);
+      top: 50%;
+      transform: translateY(-50%) translateX(-6px);
+      opacity: 0;
+      background: #000;
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      white-space: nowrap;
+      transition: opacity 160ms ease, transform 160ms ease;
+      pointer-events: none;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    }
+    .back-btn:hover::after { opacity: 1; transform: translateY(-50%) translateX(0); }
+
+    /* small screens: slightly smaller and tuck the back button inward */
+    @media (max-width:600px) {
+      .back-btn { left: 12px; top: 12px; width: 42px; height: 42px; font-size: 20px; }
+      .back-btn::after { display: none; }
     }
 
     /* Loading skeletons */
@@ -190,9 +324,19 @@
       }
       .post-header {
         padding: 12px 12px 6px 12px;
+        margin-bottom: 5px; /* extra breathing room between header and content */
+      }
+
+      /* Give the date a touch more space on small screens */
+      #postDate {
+        padding-bottom: 5px; /* increased so date is visibly separated from the horizontal rule */
+        margin-bottom: 5px;
       }
       .back-btn { left: 16px; top: 12px; padding: 6px 12px; }
-      .post-banner.banner-visible { height: 200px; }
+      /* Make the banner larger on phone so it feels more prominent */
+      /* Use !important to override global/specialized rules in other stylesheets */
+      .post-banner { height: 220px !important; min-height: 0 !important; }
+      .post-banner.banner-visible { height: 320px !important; }
     }
 
     /* On very small screens make the post page edge-to-edge */

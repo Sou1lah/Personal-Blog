@@ -13,7 +13,15 @@
 .post-body a { color: inherit; }
 .post-body h2,
 .post-body h3 { color: inherit; }
-body { transition: background-color 300ms ease, color 300ms ease; font-family: 'Buda', cursive; }
+body { transition: background-color 300ms ease, color 300ms ease; font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+
+/* Force Inter for all content (useful when content is injected dynamically) */
+html, body, .post-page, .post-body, .post-body *, .cards, .card, .card * {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+}
+
+/* Use a refined serif for headings to get a Substack-like elegant feel */
+h1, h2, h3, h4, h5, h6, .site-title, .card-title, .post-header h1, .post-body h1, .post-body h2, .post-body h3 { font-family: 'Playfair Display', Georgia, 'Times New Roman', serif !important; font-weight: 700 !important; letter-spacing: -0.02em !important; }
 
 /* Apply the theme color solidly to the whole page when a note is active (no gradients)
    --theme-bg: a soft, light background color derived from the accent
@@ -405,8 +413,8 @@ body::-webkit-scrollbar {
 
   /* Smaller drop-cap on narrow screens to keep layout tidy */
   .card-excerpt::first-letter,
-  .wiki-card-content p:first-child::first-letter,
-  .post-body:not(.no-upchar) p:first-child::first-letter {
+  .wiki-card-content > p:first-child::first-letter,
+  .post-body:not(.no-upchar) > p:first-child::first-letter {
     font-size: 1.6rem;
     padding-right: 6px;
     padding-top: 2px;
