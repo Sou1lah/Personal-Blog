@@ -253,6 +253,8 @@
 
       // If no colorValue, remove any existing note theme without animation
       if (!colorValue) {
+        // clear any temporary request for white text
+        window.__requestedNoteText = undefined;
         const page = document.querySelector('.post-page');
         document.documentElement.style.removeProperty('--theme-color');
         document.documentElement.style.removeProperty('--theme-rgb');
@@ -288,6 +290,17 @@
         // Create a soft background (lightened) and a stronger accent (slightly darkened)
         const bgRgbArr = mixWithWhite(baseRgb, 0.78); // very light background
         const accentRgbArr = darken(baseRgb, 0.08); // slightly richer accent
+
+        // If the user explicitly requested white text and the base color is pure black,
+        // interpret that as an intent for a dark background (honor user preference).
+        const wantWhiteTextOnBlack = (window.__requestedNoteText && String(window.__requestedNoteText).trim().toLowerCase() === 'white');
+        if (wantWhiteTextOnBlack && baseRgb[0] === 0 && baseRgb[1] === 0 && baseRgb[2] === 0) {
+          // use pure black background and slightly lighten accent so borders remain visible
+          bgRgbArr[0] = baseRgb[0]; bgRgbArr[1] = baseRgb[1]; bgRgbArr[2] = baseRgb[2];
+          accentRgbArr[0] = Math.min(255, baseRgb[0] + 40);
+          accentRgbArr[1] = Math.min(255, baseRgb[1] + 40);
+          accentRgbArr[2] = Math.min(255, baseRgb[2] + 40);
+        }
 
         const bgRgbStr = rgbArrToString(bgRgbArr);
         const accentRgbStr = rgbArrToString(accentRgbArr);
@@ -504,6 +517,8 @@
           }
         }
 
+        // Record requested text color (so theme apply can honor explicit white-on-black requests)
+        window.__requestedNoteText = (data.text ? String(data.text).trim() : undefined);
         // Apply note color/theme using helper
         if (typeof noteColor !== 'undefined' && noteColor) {
           applyNoteTheme(noteColor);
@@ -587,6 +602,7 @@
             }
           }
           // Text color handling: use frontmatter `text` field if present, otherwise default to black
+          const textExplicit = Object.prototype.hasOwnProperty.call(data, 'text');
           let textColor = (data.text || 'black').trim();
           if (!isValidCssColor(textColor)) {
             if (THEMES[textColor]) textColor = THEMES[textColor];
@@ -610,16 +626,20 @@
               const bgParts = bgRgbStr.split(',').map(n => parseInt(n.trim(),10));
               const bgLum = 0.2126*toLin(bgParts[0]) + 0.7152*toLin(bgParts[1]) + 0.0722*toLin(bgParts[2]);
 
-              // If both text and background are very light, force black text for readability
-              if (textLum > 0.86 && bgLum > 0.6) {
-                textColor = '#000000';
-              }
-              // If both are very dark and user requested dark text, prefer white so text remains readable on dark background
-              else if (textLum < 0.14 && bgLum < 0.35) {
-                textColor = '#FFFFFF';
+              if (!textExplicit) {
+                // If both text and background are very light, force black text for readability
+                if (textLum > 0.86 && bgLum > 0.6) {
+                  textColor = '#000000';
+                }
+                // If both are very dark and user requested dark text, prefer white so text remains readable on dark background
+                else if (textLum < 0.14 && bgLum < 0.35) {
+                  textColor = '#FFFFFF';
+                }
               }
             }
           } catch(e) {}
+          // Make the computed text color available to CSS variables (so headers using var(--theme-text) match)
+          try { document.documentElement.style.setProperty('--theme-text', textColor); } catch(e){}
           // Apply color directly to post body with !important so it overrides body-level theme text color
           postBody.style.setProperty('color', textColor, 'important');
           // Apply the same note `text` color to the title and date as well
