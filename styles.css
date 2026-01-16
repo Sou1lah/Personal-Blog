@@ -41,6 +41,16 @@ body.note-theme, html.note-theme {
   padding-bottom: 28px;
 }
 
+/* Spacing for post meta (date shown under the title) */
+.post-meta {
+  margin-bottom: 18px; /* space between meta and content */
+}
+.post-date {
+  display: inline-block; /* allow padding/margin to take effect */
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
 /* Remove any decorative shadows/ backgrounds from the title */
 .post-header h1,
 .post-header h1 * {

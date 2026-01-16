@@ -455,8 +455,12 @@
           if (noteColor === 'default') noteColor = 'brown';
         }
 
-        // No_upchar flag detection
-        if (data.no_upchar || /(?:^|\s)#?no_upchar\b/i.test(Object.keys(data).join('\n'))) {
+        // No_upchar flag detection (check both keys and values - e.g., tags: "#No_upchar")
+        if (
+          data.no_upchar ||
+          /(?:^|\s)#?no_upchar\b/i.test(Object.keys(data).join('\n')) ||
+          /(?:^|\s)#?no_upchar\b/i.test(Object.values(data).join(' '))
+        ) {
           hasNoUpChar = true;
         }
 
@@ -552,13 +556,9 @@
           if (data[k]) { displayDate = data[k]; return true; }
           return false;
         });
+        // Display the raw frontmatter value (no reformatting)
         if (displayDate) {
-          const parsed = new Date(displayDate);
-          if (!isNaN(parsed.valueOf())) {
-            const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-            displayDate = `${months[parsed.getMonth()]} ${String(parsed.getDate()).padStart(2,'0')}, ${parsed.getFullYear()}`;
-          }
-          document.getElementById('postDate').textContent = displayDate;
+          document.getElementById('postDate').textContent = String(displayDate);
         } else {
           document.getElementById('postDate').textContent = "Note";
         }
@@ -592,8 +592,9 @@
             if (THEMES[textColor]) textColor = THEMES[textColor];
             else textColor = 'black';
           }
-          // Ensure good contrast: compute luminance of chosen text color; if it's very light, fallback to black
+          // Ensure 'black' values are normalized and guard against very-light colors
           try {
+            if (String(textColor).trim().toLowerCase() === 'black') textColor = '#000000';
             const rgbStr = cssColorToRgb(textColor);
             if (rgbStr) {
               const parts = rgbStr.split(',').map(n => parseInt(n.trim(),10)/255);
@@ -602,7 +603,13 @@
               if (lum > 0.86) textColor = '#000000';
             }
           } catch(e) {}
-          postBody.style.color = textColor;
+          // Apply color directly to post body with !important so it overrides body-level theme text color
+          postBody.style.setProperty('color', textColor, 'important');
+          // Apply the same note `text` color to the title and date as well
+          const titleEl = document.getElementById('postTitle');
+          if (titleEl) titleEl.style.setProperty('color', textColor, 'important');
+          const dateEl = document.getElementById('postDate');
+          if (dateEl) dateEl.style.setProperty('color', textColor, 'important');
         } catch(e) {}
         // Add dropcap class to first paragraph only if the No_upchar flag is NOT present
         const firstP = postBody.querySelector('p');
