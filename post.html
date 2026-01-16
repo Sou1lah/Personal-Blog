@@ -592,15 +592,32 @@
             if (THEMES[textColor]) textColor = THEMES[textColor];
             else textColor = 'black';
           }
-          // Ensure 'black' values are normalized and guard against very-light colors
+          // Normalize and smartly respect user `text` preference relative to the page background
           try {
             if (String(textColor).trim().toLowerCase() === 'black') textColor = '#000000';
+            if (String(textColor).trim().toLowerCase() === 'white') textColor = '#FFFFFF';
             const rgbStr = cssColorToRgb(textColor);
             if (rgbStr) {
-              const parts = rgbStr.split(',').map(n => parseInt(n.trim(),10)/255);
-              const linear = parts.map(c => (c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4)));
-              const lum = 0.2126*linear[0] + 0.7152*linear[1] + 0.0722*linear[2];
-              if (lum > 0.86) textColor = '#000000';
+              // compute luminance helper
+              const parts = rgbStr.split(',').map(n => parseInt(n.trim(),10));
+              const toLin = (v) => { v = v/255; return (v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4)); };
+              const textLum = 0.2126*toLin(parts[0]) + 0.7152*toLin(parts[1]) + 0.0722*toLin(parts[2]);
+
+              // Determine background luminance (prefer note/theme background if set)
+              let bgColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-bg') || getComputedStyle(document.body).backgroundColor;
+              bgColor = bgColor.trim() || 'rgb(228, 220, 201)';
+              const bgRgbStr = cssColorToRgb(bgColor) || '228, 220, 201';
+              const bgParts = bgRgbStr.split(',').map(n => parseInt(n.trim(),10));
+              const bgLum = 0.2126*toLin(bgParts[0]) + 0.7152*toLin(bgParts[1]) + 0.0722*toLin(bgParts[2]);
+
+              // If both text and background are very light, force black text for readability
+              if (textLum > 0.86 && bgLum > 0.6) {
+                textColor = '#000000';
+              }
+              // If both are very dark and user requested dark text, prefer white so text remains readable on dark background
+              else if (textLum < 0.14 && bgLum < 0.35) {
+                textColor = '#FFFFFF';
+              }
             }
           } catch(e) {}
           // Apply color directly to post body with !important so it overrides body-level theme text color

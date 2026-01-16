@@ -1,4 +1,4 @@
-const themes = ['brown', 'blue', 'red', 'green', 'sky', 'purple', 'pink', 'orange', 'yellow', 'teal'];
+const themes = ['brown', 'blue', 'red', 'green', 'sky', 'purple', 'pink', 'orange', 'yellow', 'teal', 'black-white', 'sepia'];
 const themeToggle = document.querySelector('.theme-toggle');
 
 // Public helper to safely enable/disable theme toggle from other scripts

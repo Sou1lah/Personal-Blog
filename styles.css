@@ -415,6 +415,26 @@ body::-webkit-scrollbar {
 	--accent: #14b8a6;
 }
 
+/* New: black & white theme (high contrast) */
+[data-theme="black-white"] {
+	--primary: #000000;
+	--secondary: #ffffff;
+	--accent: #111111;
+	--theme-bg: #ffffff;
+	--theme-text: #000000;
+	--theme-rgb: 0,0,0;
+}
+
+/* New: sepia (warm yellowish) theme */
+[data-theme="sepia"] {
+	--primary: #4b2e1a;
+	--secondary: #f5e9d6;
+	--accent: #b8860b;
+	--theme-bg: #f5e9d6;
+	--theme-text: #3b2413;
+	--theme-rgb: 184,134,11;
+}
+
 body[data-theme] {
 	background-color: var(--secondary);
 	color: var(--primary);
