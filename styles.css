@@ -325,8 +325,30 @@ body::-webkit-scrollbar {
 }
 
 /* Header */
-.site-header { width: 50%; margin: 0 auto; border-left: 3px solid var(--brown); border-right: 3px solid var(--brown); border-bottom: 3px solid var(--brown); display: flex; align-items: center; justify-content: space-between; padding: 16px; }
-.site-title { font-size: 1.1rem; padding: 10px 18px; border: 3px solid var(--brown); border-radius: 50px; background: var(--cream); margin: 0; }
+.site-header { width: 50%; margin: 0 auto; border-left: 3px solid var(--brown); border-right: 3px solid var(--brown); border-bottom: 3px solid var(--brown); display: flex; align-items: center; justify-content: space-between; padding: 16px; position: relative; margin-bottom: 12px; }
+.site-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  bottom: -12px; /* sits just below the header inside the container */
+  background: var(--brown);
+  border-radius: 3px;
+  z-index: 1;
+  pointer-events: none;
+  width: 100%;
+}
+.site-title {
+  font-size: 2rem;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  color: var(--brown);
+  font-weight: 700;
+}
 .github-link { border: 3px solid var(--brown); padding: 8px 14px; border-radius: 50px; background: var(--brown); color: var(--cream); text-decoration: none; display: flex; align-items: center; }
 .github-link svg { color: var(--cream); transition: opacity 0.2s ease; }
 .github-link:hover { background: var(--cream); }
@@ -334,7 +356,7 @@ body::-webkit-scrollbar {
 
 /* Cards */
 .cards { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 28px; width: 100%; }
-	.card { background: var(--note-bg, white); border: 3px solid var(--note-accent, var(--brown)); padding: 0; border-radius: 10px; display:flex; flex-direction:column; gap:12px; min-height:160px; position: relative; overflow: hidden; flex: 1 1 calc(33.333% - 12px); max-width: calc(33.333% - 12px); }
+	.card { background: var(--note-bg, white); border: 3px solid var(--note-accent, var(--brown)); padding: 0; border-radius: 16px; display:flex; flex-direction:column; gap:12px; min-height:160px; position: relative; overflow: hidden; flex: 1 1 calc(33.333% - 12px); max-width: calc(33.333% - 12px); }
 	.card .card-title { color: var(--note-accent, var(--brown)); }
 	.card .btn { background: var(--note-accent, var(--brown)); color: var(--cream); border: 3px solid var(--note-accent, var(--brown)); }
 	.card .btn:hover { background: var(--cream); color: var(--note-accent, var(--brown)); border-color: var(--note-accent, var(--brown)); }
@@ -342,25 +364,47 @@ body::-webkit-scrollbar {
 .card-date { text-align: right; font-size: 0.75rem; color: rgba(36,34,27,0.6); letter-spacing: 0.5px; }
 .card-title { font-size: 1rem; font-weight:900; padding: 0 18px; margin-top: 6px; }
 .card-excerpt { color: rgba(36,34,27,0.8); font-size: .95rem; flex:1; padding: 0 18px; }
-  /* Drop-cap (first-letter) styling for card content and titles */
-  .card-excerpt::first-letter {
-    font-size: 2.2rem;
-    font-weight: 700;
+  /* Enhanced drop-cap (Wikipedia-style): larger serif initial, theme-aware */
+  .card-excerpt::first-letter,
+  .wiki-card-content > p:first-child::first-letter {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 3.6rem;
+    font-weight: 900;
     float: left;
     line-height: 1;
-    padding-right: 8px;
-    padding-top: 4px;
+    margin-right: 0.6rem;
+    margin-top: 4px;
+    color: var(--note-accent, var(--brown));
+    padding-right: 6px;
+    padding-top: 2px;
+    display: inline-block;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
-  /* Apply same drop-cap behavior to wiki card content (first paragraph) */
-  /* Use direct child selector so paragraphs inside list items (e.g. inside <li>) are NOT targeted */
-  .wiki-card-content > p:first-child::first-letter {
-    font-size: 2.2rem;
-    font-weight: 700;
+  /* Prominent drop-cap for full posts (Wikipedia-like lead letter) */
+  .post-body:not(.no-upchar) > p:first-child::first-letter {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 8rem;
+    font-weight: 900;
     float: left;
-    line-height: 1;
-    padding-right: 8px;
-    padding-top: 4px;
+    line-height: 0.8;
+    margin-right: 0.6rem;
+    margin-top: 0;
+    color: var(--note-accent, var(--primary));
+    padding-right: 10px;
+    padding-top: 2px;
+    display: inline-block;
+    initial-letter: 4 3;
+    -webkit-initial-letter: 4 3;
+    shape-outside: circle(50%);
+  }
+
+  /* Make drop-cap smaller on narrow viewports */
+  @media (max-width:600px) {
+    .post-body:not(.no-upchar) > p:first-child::first-letter { font-size: 4.8rem; line-height: 1; margin-top: 0.05rem; }
+    .card-excerpt::first-letter,
+    .wiki-card-content > p:first-child::first-letter { font-size: 2.6rem; }
   }
 
   /* Per-note content accent for wiki cards (set via --note-accent on .wiki-card-content when frontmatter provides `color`) */
@@ -372,12 +416,19 @@ body::-webkit-scrollbar {
 
   /* Drop-cap for post content: only the top-level first paragraph inside .post-body */
   .post-body:not(.no-upchar) > p:first-child::first-letter {
-    font-size: 3.5rem;
-    font-weight: 700;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 8rem;
+    font-weight: 900;
     float: left;
-    line-height: 2.5rem;
-    padding-right: 8px;
-    padding-top: 6px;
+    line-height: 0.8;
+    margin-right: 0.6rem;
+    margin-top: 0;
+    padding-right: 10px;
+    padding-top: 2px;
+    display: inline-block;
+    initial-letter: 4 3;
+    -webkit-initial-letter: 4 3;
+    shape-outside: circle(50%);
   }
   /* Note-aware content accent color (set via --note-accent on the .post-body element).
      Accepts a hex value or a theme-derived accent. Defaults to var(--primary). */
@@ -391,35 +442,95 @@ body::-webkit-scrollbar {
 .btn { display:inline-block; border-radius:50px; background: var(--brown); color: var(--cream); text-decoration:none; padding:6px 12px; font-weight:700; letter-spacing:1px; align-self:flex-end; margin: 0 12px 12px 0; font-size: 14px; }
 .btn:hover { background: var(--cream); color: var(--brown); border:3px solid var(--brown); }
 
-.site-footer { color: rgba(36,34,27,0.8); font-size: .9rem; text-align:center; margin: 28px 0 0 0; }
+.footer-sep {
+  display: none; /* hidden on desktop */
+  height: 8px;              /* visible thickness when shown */
+  background: var(--brown);
+  border-radius: 3px;
+  width: 100%;
+  margin: 8px 0 18px 0;    /* vertical spacing above footer */
+}
+
+.site-footer { color: rgba(36,34,27,0.8); font-size: .9rem; text-align:center; margin: 0 0 0 0; padding-top: 16px; }
+
+@media (max-width:600px) {
+  .footer-sep {
+    display: block; /* visible on phones */
+    width: 100vw; /* edge-to-edge like header */
+    margin-left: 50%;
+    transform: translateX(-50%);
+    border-radius: 0; /* match header mobile style */
+    height: 3px; /* same thickness as header */
+    margin-top: 8px; /* similar spacing */
+    margin-bottom: 12px;
+  }
+  .site-footer { padding-top: 12px; }
+}
 
 /* Responsive tweaks */
 @media (max-width:768px){ 
   .container { width: 90%; }
   .site-header { width: 90%; }
 }
+
+/* Phone adjustments: make header title larger and spacing tighter */
+@media (max-width:420px){
+  .site-title { font-size: 3rem; letter-spacing: 0.8px; font-weight: 800; padding: 2px 6px; }
+  .site-header { padding: 12px; width: 96%; }
+}
 @media (max-width:600px){ 
-  body { margin: 0.5em; }
-  .container { width: 95%; padding: 12px; }
-  .site-header { width: 95%; padding: 12px; }
+  body { margin: 0.5em 0 0 0; }
+  /* Add explicit horizontal padding so content doesn't touch screen edges */
+  .container { width: 95%; padding: 12px 16px; }
+  /* Add a subtle top spacing so header isn't too close to the screen edge */
+  .site-header { width: 95%; padding: 12px 16px !important; margin-top: 10px !important; }
   .site-title { font-size: 0.95rem; padding: 8px 14px; }
   .github-link { padding: 6px 10px; }
-  .cards { gap: 12px; }
-  .card { padding: 0; min-height: auto; }
-  .card-image { height: 120px; }
-  .card-title { font-size: 1.2rem; font-weight:900; padding: 0 14px; margin-top: 10px; }
-  .card-excerpt { font-size: 0.88rem; padding: 0 14px; }
-  .btn { padding: 10px 16px; font-size: 18px; margin: 8px 14px 14px 0; }
+  .cards { gap: 12px; padding-left: 6px; padding-right: 6px; }
+
+  /* Make cards two-up on small screens so each card is narrower and shorter */
+  .card {
+    padding: 0 8px; /* small inner horizontal padding */
+    min-height: auto;
+    flex: 1 1 calc(50% - 12px);
+    max-width: calc(50% - 12px);
+    min-height: 120px;
+    border-radius: 12px;
+  }
+  .card-image { height: 100px; }
+  .card-title { font-size: 1rem; font-weight:900; padding: 0 12px; margin-top: 8px; }
+  .card-excerpt { font-size: 0.86rem; padding: 0 12px; }
+  .btn { padding: 8px 12px; font-size: 16px; margin: 6px 12px 12px 0; }
 
   /* Smaller drop-cap on narrow screens to keep layout tidy */
   .card-excerpt::first-letter,
-  .wiki-card-content > p:first-child::first-letter,
-  .post-body:not(.no-upchar) > p:first-child::first-letter {
-    font-size: 1.6rem;
-    padding-right: 6px;
-    padding-top: 2px;
-    line-height: 1.8rem;
+  .wiki-card-content > p:first-child::first-letter { font-size: 2.2rem; padding-right: 6px; padding-top: 2px; line-height: 1.6rem; }
+  .post-body:not(.no-upchar) > p:first-child::first-letter { font-size: 4.2rem; padding-right: 6px; padding-top: 2px; line-height: 1.1rem; }
+
+  /* Mobile: add a header divider like desktop (full-width within the header/container) */
+  .site-header { position: relative; flex-wrap: wrap; }
+  .site-header::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: calc(100% + 8px); /* sit just below the header */
+    height: 3px;
+    width: 100vw; /* edge-to-edge across the viewport */
+    background: var(--brown);
+    border-radius: 0; /* flush edges for full-width rule */
+    z-index: 1;
+    pointer-events: none;
   }
+}
+
+/* For very small phones, stack cards full-width */
+@media (max-width:420px) {
+  .card { flex: 1 1 100%; max-width: 100%; min-height: 110px; }
+  .card-image { height: 90px; }
+  .card-title { font-size: 1rem; padding: 0 10px; }
+  .card-excerpt { font-size: 0.82rem; padding: 0 10px; }
+  .cards { gap: 10px; }
 }
 
 /* Mobile Gears - Desktop Hidden */
@@ -719,7 +830,7 @@ body[data-theme] .card-image {
   /* Make the content actually full-bleed. If you prefer a small inner gutter, change padding here. */
   .post-body { padding-left: 0 !important; padding-right: 0 !important; }
 
-  .site-title { font-size: 0.9rem; padding: 6px 12px; }
+  .site-title { font-size: 1.6rem !important; padding: 6px 10px !important; letter-spacing: 0.4px !important; font-weight: 800 !important; }
   .github-link { padding: 4px 8px; }
   .github-link svg { width: 24px; height: 24px; }
   .cards { gap: 10px; }
@@ -730,7 +841,30 @@ body[data-theme] .card-image {
   .btn { font-size: 16px; padding: 10px 16px; margin: 8px 12px 12px 0; }
 }
 
-.vertical-line {
+/* Reading progress bar */
+#progressContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: rgba(0,0,0,0.03);
+  z-index: 9999;
+  pointer-events: none; /* don't block clicks */
+}
+#progressBar {
+  height: 100%;
+  width: 0%;
+  background: var(--theme-color, var(--accent));
+  box-shadow: 0 0 12px rgba(0,0,0,0.08) inset;
+  transition: width 120ms linear;
+  transform-origin: left;
+}
+@media (max-width:420px) {
+  #progressContainer { height: 8px; }
+}
+
+.vertical-line { 
   position: fixed;
   top: 0;
   bottom: 0;

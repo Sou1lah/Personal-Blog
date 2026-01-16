@@ -16,18 +16,38 @@
                 });
             // Reading progress bar logic
             const progressBar = document.getElementById('progressBar');
-            window.addEventListener('scroll', () => {
+            const progressContainer = document.getElementById('progressContainer');
+            function updateProgressBar() {
               const postPage = document.querySelector('.post-page');
-              if (!postPage) return;
-              const rect = postPage.getBoundingClientRect();
-              const scrollTop = window.scrollY || document.documentElement.scrollTop;
-              const docHeight = postPage.scrollHeight - window.innerHeight;
-              let percent = 0;
-              if (docHeight > 0) {
-                percent = Math.min(100, Math.max(0, (scrollTop / docHeight) * 100));
+              if (!postPage || !progressBar || !progressContainer) return;
+              const postTop = postPage.getBoundingClientRect().top + window.scrollY;
+              const postHeight = Math.max(postPage.scrollHeight || 0, postPage.offsetHeight || 0);
+              // Hide progress bar when entire content fits in the viewport
+              if (postHeight <= window.innerHeight) {
+                progressContainer.style.display = 'none';
+                progressBar.style.width = '0%';
+                progressBar.setAttribute('aria-valuenow', '0');
+                return;
+              } else {
+                progressContainer.style.display = 'block';
               }
+              const start = postTop;
+              const end = postTop + postHeight - window.innerHeight;
+              let percent = 0;
+              if (end > start) {
+                percent = ((window.scrollY - start) / (end - start)) * 100;
+              } else {
+                percent = window.scrollY > start ? 100 : 0;
+              }
+              percent = Math.min(100, Math.max(0, percent));
               progressBar.style.width = percent + '%';
-            });
+              progressBar.setAttribute('aria-valuenow', Math.round(percent));
+            }
+            window.addEventListener('scroll', updateProgressBar);
+            window.addEventListener('resize', updateProgressBar);
+            document.addEventListener('DOMContentLoaded', updateProgressBar);
+            // initialize once
+            updateProgressBar();
         // Go to Top button logic
         const goTopBtn = document.getElementById('goTopBtn');
         window.addEventListener('scroll', () => {
