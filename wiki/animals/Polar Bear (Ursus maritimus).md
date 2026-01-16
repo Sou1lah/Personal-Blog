@@ -110,7 +110,7 @@ date : 2024-06-15
   </div>
   <div class="column-spacer"></div>
   <div class="column-right">
-    <img src="../assets/polarhair.jpg" width="500" height="500" alt="Polar Bear Size Comparison">
+    <img src="../assets/polarhair.jpg" width="500" height="500" alt="../assets/polarsize.jpg">
   </div>
 </div>
 

@@ -489,6 +489,10 @@
         // Display as formatted markdown HTML
         const postBody = document.getElementById('postContent');
         postBody.innerHTML = container.innerHTML;
+        // Ensure the post content uses the same styling as other posts and is visible
+        postBody.classList.add('post-body');
+        postBody.style.display = 'block';
+        postBody.style.visibility = 'visible';
         postBody.style.whiteSpace = 'normal';
         // Use zero padding on phones so content can be full-bleed; keep a comfortable padding on wider screens
         function applyPostBodyPadding() {

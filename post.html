@@ -10,21 +10,17 @@
   <link rel="stylesheet" href="post.css">
 </head>
 <body>
-  <div class="post-banner"></div>
-  <h1 id="postTitle">Post Title</h1>
-  <div id="postContent" style="display:none;"></div>
+  <div class="post-page">
+    <div class="post-banner"><img class="banner-img" src="https://raw.githubusercontent.com/Sou1lah/Personal-Blog/main/assets/ImagePlaceholder.jpg" alt="Banner"></div>
+    <header class="post-header">
+      <h1 id="postTitle">Post Title</h1>
+      <div class="post-meta">
+        <p id="postDate">Date</p>
+      </div>
+    </header>
+    <div id="postContent" class="post-body" style="display:none;"></div>
+  </div>
   <div id="imgZoomOverlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);z-index:3000;align-items:center;justify-content:center;cursor:zoom-out;"></div>
-  <script>
-    // Set title immediately from URL parameter
-    const urlParams = new URLSearchParams(window.location.search);
-    const note = urlParams.get('note');
-    if (note) {
-      const title = note.split('/').pop().replace('.md', '').replace(/_/g, ' ');
-      document.getElementById('postTitle').textContent = title;
-    }
-  </script>
   <script src="post.js"></script>
-</body>
-</html>
 </body>
 </html>
