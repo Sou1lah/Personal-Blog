@@ -9,7 +9,7 @@ text: black
   <div style="flex:1;min-width:200px;">
     <p class="first-paragraph"><strong>Polar bears</strong> are the largest land carnivores and marine mammals uniquely adapted to life in the Arctic. With their distinctive white appearance and remarkable swimming abilities, they are perfectly suited for hunting seals on sea ice. However, climate change poses the greatest threat to their survival as melting ice reduces their hunting grounds.</p>
   </div>
-  <img src="../assets/polarbear.jpg" alt="Polar Bear in Den" style="max-width:320px;height:auto;">
+  <img src="../assets/polarbear.jpg" alt="Polar Bear in Den" style="max-width:20px;height:auto;">
 </figure>
 
 ## Habitat
