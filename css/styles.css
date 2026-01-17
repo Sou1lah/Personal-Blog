@@ -367,7 +367,7 @@ body::-webkit-scrollbar {
 
 /* Cards */
 .cards { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 28px; width: 100%; }
-	.card { background: var(--note-bg, white); border: 3px solid var(--note-accent, var(--brown)); padding: 0; border-radius: 16px; display:flex; flex-direction:column; gap:12px; min-height:160px; position: relative; overflow: hidden; flex: 1 1 calc(33.333% - 12px); max-width: calc(33.333% - 12px); }
+	.card { background: var(--note-bg, white); border: 3px solid var(--note-accent, var(--brown)); padding: 0; border-radius: 20px; display:flex; flex-direction:column; gap:12px; min-height:160px; position: relative; overflow: hidden; flex: 1 1 calc(33.333% - 12px); max-width: calc(33.333% - 12px); }
 	.card .card-title { color: var(--note-accent, var(--brown)); }
 	.card .btn { background: var(--note-accent, var(--brown)); color: var(--cream); border: 3px solid var(--note-accent, var(--brown)); }
 	.card .btn:hover { background: var(--cream); color: var(--note-accent, var(--brown)); border-color: var(--note-accent, var(--brown)); }
@@ -769,7 +769,16 @@ html.no-transitions *::after {
     margin-left: -12px;
     margin-right: -12px;
     width: calc(100% + 24px);
-    border-radius: 0; /* full-bleed on small screens */
+    border-radius: 16px !important; /* keep rounded corners on mobile */
+    overflow: hidden !important;
+  }
+
+  /* Enforce rounded corners for images in content on mobile (override inline styles) */
+  .post-body img,
+  .post-body figure img,
+  img[style] {
+    border-radius: 16px !important;
+    overflow: hidden !important;
   }
 }
 
@@ -874,6 +883,12 @@ body[data-theme] .card-image {
   /* Make the content actually full-bleed. If you prefer a small inner gutter, change padding here. */
   .post-body { padding-left: 0 !important; padding-right: 0 !important; }
 
+  /* Keep modest rounding on very small screens */
+  .post-banner { border-radius: 12px !important; overflow: hidden !important; }
+  .post-body img,
+  .post-body figure img,
+  img[style] { border-radius: 12px !important; overflow: hidden !important; }
+
   .site-title { font-size: 1.6rem !important; padding: 6px 10px !important; letter-spacing: 0.4px !important; font-weight: 800 !important; }
   .github-link { padding: 4px 8px; }
   .github-link svg { width: 24px; height: 24px; }
@@ -882,7 +897,19 @@ body[data-theme] .card-image {
   .card-image { height: 250px; }
 
 /* Ensure note banners inserted as <img> cover the banner area */
-.note-banner img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 16px 16px 0 0; }
+/* Stronger rule: ensure the banner wrapper clips children and keeps rounded corners even with inline image styles */
+.note-banner, .note-banner.banner-loaded {
+  border-radius: 5px 5px 0 0 !important;
+  overflow: hidden !important;
+}
+.note-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: inherit !important; /* inherit from wrapper and override inline styles */
+  -webkit-backface-visibility: hidden;
+}
   .card-title { font-size: 1.1rem; font-weight:900; padding: 0 12px; margin-top: 10px; }
   .card-excerpt { font-size: 0.80rem; padding: 0 12px; }
   .btn { font-size: 16px; padding: 10px 16px; margin: 8px 12px 12px 0; }

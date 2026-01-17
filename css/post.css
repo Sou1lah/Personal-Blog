@@ -59,7 +59,7 @@
       /* Negative margin to overlap header into the banner on small screens with moderate depth */
       .post-header {
         margin-top: -48px;
-        border-radius: 10px; /* rounded all corners for a compact card look */
+        border-radius: 20px; /* more rounded corners on mobile */
         padding: 12px 18px;
         box-shadow: 0 8px 20px rgba(0,0,0,0.06);
         background: rgba(255,255,255,0.88);
@@ -68,12 +68,22 @@
       }
       /* Keep banner slightly shorter on mobile and allow overlap */
       .post-banner {
-        border-radius: 10px 10px 0 0;
+        border-radius: 20px 20px 0 0;
         box-shadow: 0 4px 12px rgba(0,0,0,0.04);
         overflow: visible;
         height: 220px !important;
       }
       .post-banner.banner-visible { height: 260px !important; }
+
+      /* Ensure images inside posts are rounded on mobile even when inline styles exist */
+      .post-body img,
+      .post-body figure img,
+      .post-banner .banner-img {
+        border-radius: 20px !important;
+        overflow: hidden !important;
+      }
+      /* Specifically override any inline style="border-radius:..." on images */
+      .post-body img[style] { border-radius: 20px !important; }
     }
 
     .post-banner::after {
@@ -370,7 +380,7 @@
         margin-bottom: 5px; /* extra breathing room between header and content */
         /* Apply rounded corners and overlap on mobile like desktop */
         margin-top: -48px; /* pull header up into banner */
-        border-radius: 10px;
+        border-radius: 20px;
         background: rgba(255,255,255,0.92);
         box-shadow: 0 8px 20px rgba(0,0,0,0.06);
         z-index: 5;
@@ -392,7 +402,15 @@
     @media (max-width:420px) {
       .post-page { max-width: 100%; margin: 0; padding: 0; box-sizing: border-box; border-left: none; border-right: none; border-bottom: none; }
       /* Keep rounded header on very small screens and a modest overlap */
-      .post-header { padding: 12px; border-bottom: none; margin-top: -36px; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.05); background: rgba(255,255,255,0.9); }
+      .post-header { padding: 12px; border-bottom: none; margin-top: -36px; border-radius: 20px; box-shadow: 0 6px 18px rgba(0,0,0,0.05); background: rgba(255,255,255,0.9); }
+
+      /* Smaller images rounding on very small screens */
+      .post-body img,
+      .post-body figure img,
+      .post-banner .banner-img {
+        border-radius: 20px !important;
+        overflow: hidden !important;
+      }
     }
 
 .vertical-line {
