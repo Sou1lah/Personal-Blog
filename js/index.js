@@ -1,7 +1,6 @@
     const GITHUB_API = 'https://api.github.com/repos/Sou1lah/Personal-Blog/contents/wiki';
     const GITHUB_RAW = 'https://raw.githubusercontent.com/Sou1lah/Personal-Blog/main/wiki';
 
-    const reloadBtn = document.getElementById('reloadBtn');
     const blogSection = document.getElementById('blogSection');
     const notesSection = document.getElementById('notesSection');
     const notesCardsContainer = document.getElementById('notesCardsContainer');
@@ -10,20 +9,6 @@
 
     // Load notes on page load
     loadNotesContent();
-
-    reloadBtn.addEventListener('click', async () => {
-      // Reload notes from wiki (force fetch and update cache)
-      try {
-        reloadBtn.disabled = true;
-        reloadBtn.style.transform = 'rotate(360deg)';
-        if (window.setThemeToggleEnabled) window.setThemeToggleEnabled(false);
-        await loadNotesContent(true); // force fetch
-      } finally {
-        reloadBtn.style.transform = '';
-        reloadBtn.disabled = false;
-        if (window.setThemeToggleEnabled) window.setThemeToggleEnabled(true);
-      }
-    });
 
     async function loadNotesContent(forceFetch = false) {
       notesCardsContainer.innerHTML = '<p style="text-align: center; padding: 40px; font-size: 1.1rem; color: rgba(36, 34, 27, 0.7);">Loading notes...</p>';
@@ -48,7 +33,9 @@
         // Helper: recursively fetch all .md files from GitHub API
         async function fetchAllMarkdownFiles(apiUrl, category = null) {
           const result = {};
-          const response = await fetch(apiUrl, { headers: { 'Accept': 'application/vnd.github.v3+json' } });
+          const ghHeaders = { 'Accept': 'application/vnd.github.v3+json' };
+          if (typeof window !== 'undefined' && window.__GITHUB_TOKEN) ghHeaders['Authorization'] = `token ${window.__GITHUB_TOKEN}`;
+          const response = await fetch(apiUrl, { headers: ghHeaders });
           if (!response.ok) return result;
           const items = await response.json();
           for (const item of items) {
@@ -127,9 +114,29 @@
             }
             categories = built;
             try { localStorage.setItem('wikiNotesCache', JSON.stringify(categories)); } catch (e) {}
+
+            // Also attempt a live GitHub API fetch to pick up files added directly to the repo
+            // (this avoids missing new files when index.json wasn't updated).
+            try {
+              const live = await fetchAllMarkdownFiles(GITHUB_API);
+              if (live && Object.keys(live).length) {
+                console.log('Live GitHub listing found — using it instead of index.json manifest');
+                categories = live;
+                try { localStorage.setItem('wikiNotesCache', JSON.stringify(categories)); } catch (e) {}
+              }
+            } catch (liveErr) {
+              // Ignore and keep using index.json-derived categories
+              console.warn('Live GitHub listing failed, using index.json manifest:', liveErr);
+            }
           } else {
-            // No index.json: try Google Drive first if configured
-            if (typeof window !== 'undefined' && window.__DRIVE_FOLDER_ID && window.__GOOGLE_DRIVE_API_KEY) {
+            // No index.json: try GitHub first (default). If GitHub returns no files and Drive is configured, use Drive as fallback.
+            try {
+              categories = await fetchAllMarkdownFiles(GITHUB_API);
+            } catch (githubErr) {
+              console.warn('GitHub API fetch failed:', githubErr);
+            }
+
+            if ((!categories || Object.keys(categories).length === 0) && typeof window !== 'undefined' && window.__DRIVE_FOLDER_ID && window.__GOOGLE_DRIVE_API_KEY) {
               try {
                 const driveFiles = await (async function fetchDriveFilesRec(folderId, apiKey, parentPath = '') {
                   const q = encodeURIComponent(`'${folderId}'+in+parents+and+trashed=false`);
@@ -171,20 +178,13 @@
               }
             }
 
-            // Fall back to GitHub API or local /wiki if Drive not used or empty
+            // Final fallback to local /wiki
             if (!Object.keys(categories).length) {
               try {
-                categories = await fetchAllMarkdownFiles(GITHUB_API);
-              } catch (githubErr) {
-                console.warn('GitHub API failed, attempting local /wiki fallback:', githubErr);
-                try {
-                  categories = await fetchAllMarkdownFilesLocal();
-                } catch (localErr) {
-                  console.error('Local /wiki fallback failed:', localErr);
-                  throw githubErr;
-                }
+                categories = await fetchAllMarkdownFilesLocal();
+              } catch (localErr) {
+                console.error('Local /wiki fallback failed:', localErr);
               }
-              try { localStorage.setItem('wikiNotesCache', JSON.stringify(categories)); } catch (e) {}
             }
           }
         } catch (e) {
@@ -242,18 +242,16 @@
             // Synchronously add a placeholder for tags, to be filled after fetch
             const cardId = `card-${category.replace(/[^a-zA-Z0-9]/g, '')}-${file.name.replace(/[^a-zA-Z0-9]/g, '')}`;
             html += `
-              <article class="card" id="${cardId}" style="display: flex; flex-direction: column; min-height: 260px; position: relative; padding-bottom: 72px;">
+              <article class="card" id="${cardId}" ${slug ? `data-slug="${slug}"` : `data-note="${encodeURIComponent(path)}"`} style="display: flex; flex-direction: column; min-height: 260px; position: relative; padding-bottom: 72px;">
                 <div class="note-banner" data-raw-url="${rawUrl}" style="width: 100%; height: 140px; background-color: #d4c5b9; background-size: cover; background-position: center; background-repeat: no-repeat; border-radius: 16px 16px 0 0;"></div>
                 <h3 class="card-title" style="margin-top: 12px;">${title}</h3>
                 <div style="flex: 1;"></div>
-                <div class="card-footer" style="position: absolute; left: 16px; right: 16px; bottom: 16px; z-index: 2; pointer-events: auto; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                <div class="card-footer" style="position: absolute; left: 16px; right: 12px; bottom: 12px; z-index: 2; pointer-events: auto; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
                   <div class="note-tags-scroll-wrap" style="flex: 1 1 auto; min-width: 0; max-width: calc(100% - 110px); overflow: hidden; position: relative;">
                     <div class="note-tags" style="display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; padding-bottom: 2px; -webkit-overflow-scrolling: touch; max-width: 100%; position: relative;"></div>
                     <div class="tags-fade" style="position: absolute; right: 0; top: 0; width: 40px; height: 100%; pointer-events: none; background: linear-gradient(to right, transparent, rgba(245,240,230,0.6) 95%);"></div>
                   </div>
-                  <button class="btn lock-btn" ${slug ? `data-slug="${slug}"` : `data-note="${encodeURIComponent(path)}"`} style="flex: 0 0 auto; padding: 0; margin: 0;" title="Locked" aria-label="Locked">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0110 0v4"></path></svg>
-                  </button>
+                  <button class="btn lock-btn" ${slug ? `data-slug="${slug}"` : `data-note="${encodeURIComponent(path)}"`} style="flex: 0 0 auto; padding: 6px 14px; border-radius:50px; min-width:64px;" title="Read" aria-label="Read"> <span class="read-label">Read</span> </button>
                 </div>
                 <style>
                   .note-tags::-webkit-scrollbar {
@@ -287,6 +285,8 @@
         const UNLOCK_KEY = 'blog_unlocked';
         const CORRECT_PASSWORD = (typeof window !== 'undefined' && window.__BLOG_PASSWORD) ? window.__BLOG_PASSWORD : 'ishowspeed'; // prefer injected password (via config.js), fallback to local value
         if (!window || !window.__BLOG_PASSWORD) console.debug('Using fallback blog password from source. To inject via CI, create a config.js with window.__BLOG_PASSWORD = "..."');
+        // Front-end UX change: remove visible lock by defaulting client to unlocked while preserving server-side/password logic.
+        try { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(UNLOCK_KEY, 'true'); } catch (e) {}
         const loginBtnEl = document.getElementById('loginBtn');
         const loginModal = document.getElementById('loginModal');
         const loginPasswordInput = document.getElementById('loginPasswordInput');
@@ -360,11 +360,7 @@
 
         updateLoginUI();
 
-        // If not unlocked, automatically show the login modal on entry
-        if (!isUnlocked()) {
-          // small delay so UI renders before opening modal
-          setTimeout(() => { openLoginModal(); }, 50);
-        }
+
 
         // Simple runtime sanity check: detect if core stylesheet failed to load and warn in console visibly
         document.addEventListener('DOMContentLoaded', () => {
@@ -412,6 +408,23 @@
               }
             });
           });
+
+          // Also make entire card clickable (supports keyboard users and removes need for a separate lock button)
+          const cards = notesCardsContainer.querySelectorAll('.card[data-slug], .card[data-note]');
+          cards.forEach(card => {
+            const noteSlug = card.getAttribute('data-slug');
+            const notePath = card.getAttribute('data-note');
+            card.addEventListener('click', (e) => {
+              // Avoid clicks on tag scroll area or other interactive controls
+              if (e.target.closest('.note-tags') || e.target.closest('.btn')) return;
+              const targetUrl = noteSlug ? `post.html?slug=${encodeURIComponent(noteSlug)}` : `post.html?note=${notePath}`;
+              if (isUnlocked()) {
+                window.location = targetUrl;
+              } else {
+                openLoginModal(() => { window.location = targetUrl; });
+              }
+            });
+          });
         }
 
         attachLockHandlers();
@@ -423,7 +436,21 @@
           const bannerElement = bannerElements[i];
           const rawUrl = bannerElement.getAttribute('data-raw-url');
           try {
-            const r = await fetch(rawUrl);
+            let r = await fetch(rawUrl);
+            if (r.ok) {
+              const ct = (r.headers.get('content-type') || '').toLowerCase();
+              if (ct.includes('text/html') || ct.includes('application/json')) {
+                // Fallback to GitHub API raw endpoint (handles cases where raw host returns HTML or is blocked)
+                try {
+                  const relPath = rawUrl.replace(`${GITHUB_RAW}/`, '').replace(/^\/+/, '');
+                  const apiUrlForFile = `https://api.github.com/repos/Sou1lah/Personal-Blog/contents/${relPath}`;
+                  const ghHeaders = { 'Accept': 'application/vnd.github.v3.raw' };
+                  if (typeof window !== 'undefined' && window.__GITHUB_TOKEN) ghHeaders['Authorization'] = `token ${window.__GITHUB_TOKEN}`;
+                  const arf = await fetch(apiUrlForFile, { headers: ghHeaders });
+                  if (arf.ok) r = arf;
+                } catch (e) { /* ignore fallback errors */ }
+              }
+            }
             if (!r.ok) throw new Error('Failed to fetch markdown: ' + rawUrl);
             const md = await r.text();
             const fm = md.match(/^---\n([\s\S]*?)\n---\n/);

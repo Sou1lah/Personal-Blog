@@ -64,6 +64,9 @@
       margin-bottom: 0; /* remove space after header so content starts at the border */
       padding: 12px 40px 6px 40px; /* compact header padding */
       border-bottom: none; /* removed visual separator as requested */
+      border-radius: 12px;
+      box-shadow: 1 6px 18px rgba(0,0,0,0.08), inset 0 8px 18px rgba(0,0,0,0.12);
+      background: var(--cream);
     }
 
     .post-meta {

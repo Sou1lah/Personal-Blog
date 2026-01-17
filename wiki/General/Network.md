@@ -1,4 +1,9 @@
-# **Network
+---
+banner: https://www.cisco.com/content/dam/cisco-cdc/site/images/legacy/assets/swa/img/anchor-info/network-designed-628x353.jpg
+color: white
+text: black
+---
+# Network:
 
 - **Network:** A group of connected devices that communicate and share data.
     
@@ -23,7 +28,7 @@
 - **Standards & organizations:**
     
     - **IEEE:** Hardware & link-layer standards (Ethernet, Wi-Fi).
-        
+        General
     - **IETF:** Internet protocols & standards (TCP/IP, HTTP, DNS).
         
 

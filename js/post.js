@@ -393,6 +393,7 @@
         const UNLOCK_KEY = 'blog_unlocked';
         const CORRECT_PASSWORD = (typeof window !== 'undefined' && window.__BLOG_PASSWORD) ? window.__BLOG_PASSWORD : 'ishowspeed';
         if (!window || !window.__BLOG_PASSWORD) console.debug('Using fallback blog password from source. To inject via CI, create a config.js with window.__BLOG_PASSWORD = "..."');
+        try { sessionStorage.setItem(UNLOCK_KEY, 'true'); } catch (e) {}
         if (sessionStorage.getItem(UNLOCK_KEY) !== 'true') {
           // Use modal-based prompt on post page so users always see the popout
           const loginModal = document.getElementById('loginModal');
@@ -454,7 +455,32 @@
 
         // Cache-bust note fetch so edits to frontmatter (e.g., `text:` or `color:`) appear immediately
         const sep = rawUrl.includes('?') ? '&' : '?';
-        const response = await fetch(`${rawUrl}${sep}t=${Date.now()}`, { cache: 'no-store' });
+        let response = await fetch(`${rawUrl}${sep}t=${Date.now()}`, { cache: 'no-store' });
+        // If server returned HTML (MIME mismatch) or JSON (error page), try GitHub API raw endpoint with token if available
+        if (response.ok) {
+          const ct = (response.headers.get('content-type') || '').toLowerCase();
+          if (ct.includes('text/html') || ct.includes('application/json')) {
+            try {
+              const relPath = rawUrl.replace(`${GITHUB_RAW}/`, '').replace(/^\/+/, '');
+              const apiUrlForFile = `https://api.github.com/repos/Sou1lah/Personal-Blog/contents/${relPath}`;
+              const ghHeaders = { 'Accept': 'application/vnd.github.v3.raw' };
+              if (typeof window !== 'undefined' && window.__GITHUB_TOKEN) ghHeaders['Authorization'] = `token ${window.__GITHUB_TOKEN}`;
+              const arf = await fetch(apiUrlForFile, { headers: ghHeaders });
+              if (arf.ok) response = arf;
+            } catch (e) { /* ignore fallback errors */ }
+          }
+        }
+        if (!response.ok) {
+          // Attempt direct API raw fetch as a last resort
+          try {
+            const relPath = rawUrl.replace(`${GITHUB_RAW}/`, '').replace(/^\/+/, '');
+            const apiUrlForFile = `https://api.github.com/repos/Sou1lah/Personal-Blog/contents/${relPath}`;
+            const ghHeaders = { 'Accept': 'application/vnd.github.v3.raw' };
+            if (typeof window !== 'undefined' && window.__GITHUB_TOKEN) ghHeaders['Authorization'] = `token ${window.__GITHUB_TOKEN}`;
+            const arf2 = await fetch(apiUrlForFile, { headers: ghHeaders });
+            if (arf2.ok) response = arf2;
+          } catch (e) { /* ignore */ }
+        }
 
         // Runtime diagnostics: warn if stylesheet missing on post page (helps debugging broken style issues)
         try {

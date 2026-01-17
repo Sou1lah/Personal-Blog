@@ -25,18 +25,7 @@
   </div>
   <button id="goTopBtn" aria-label="Go to top" title="Go to top">↑</button>
   <div id="imgZoomOverlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);z-index:3000;align-items:center;justify-content:center;cursor:zoom-out;"></div>
-  <!-- Login modal (hidden by default) — same as homepage so users are prompted on direct post visits -->
-  <div id="loginModal" style="display:none; position:fixed; inset:0; background: rgba(0,0,0,0.55); z-index:3000; align-items:center; justify-content:center;">
-    <div style="background:var(--cream); padding:18px; border:3px solid var(--brown); border-radius:10px; width:320px; max-width: calc(100% - 40px); display:flex; flex-direction:column; gap:12px;">
-      <h3 style="margin:0; font-family: 'Playfair Display', serif; color:var(--brown);">Unlock Blog</h3>
-      <p style="margin:0; color: rgba(36,34,27,0.8); font-size:0.9rem;">Enter the password to unlock reading access.</p>
-      <input id="loginPasswordInput" type="password" placeholder="Password" style="padding:10px; border:2px solid rgba(36,34,27,0.12); border-radius:6px; font-family: 'IBM Plex Mono', monospace; font-weight:700;" />
-      <div style="display:flex; gap:8px; justify-content:flex-end;">
-        <button id="cancelLoginBtn" style="padding:8px 12px; background:transparent; border:3px solid var(--brown); border-radius:50px; font-weight:700;">Cancel</button>
-        <button id="submitLoginBtn" style="padding:8px 12px; background:var(--brown); color:var(--cream); border:3px solid var(--brown); border-radius:50px; font-weight:700;">Unlock</button>
-      </div>
-    </div>
-  </div>
+
 
   <!-- Optional injected config (created by CI from GitHub Actions secret) -->
   <script src="config.js"></script>

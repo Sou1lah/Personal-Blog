@@ -684,7 +684,7 @@ html.no-transitions *::after {
   width: 100% !important;
   max-width: none !important;
   margin: 0 !important;
-  border-radius: 0 !important; /* remove rounding */
+  border-radius: 5 !important; /* remove rounding */
   box-shadow: none !important;
   padding: 12px 36px !important; /* tighter padding for header */
   border: none !important; /* remove subtle border */
