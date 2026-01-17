@@ -668,17 +668,17 @@
               const md = src.match(/\[([^\]]+)\]\(([^)]+)\)/);
               if (md) {
                 const text = md[1]; const url = md[2];
-                sourceEl.innerHTML = `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+                sourceEl.innerHTML = `<strong>Source:</strong> <a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
                 sourceEl.style.display = '';
               } else if (/^https?:\/\//i.test(src)) {
                 // Show hostname-friendly label, keep full URL on hover
                 let label = src;
                 try { label = (new URL(src)).hostname.replace(/^www\./, ''); } catch(e) {}
-                sourceEl.innerHTML = `<a href="${src}" target="_blank" rel="noopener noreferrer" title="${src}">${label}</a>`;
+                sourceEl.innerHTML = `<strong>Source:</strong> <a href="${src}" target="_blank" rel="noopener noreferrer" title="${src}">${label}</a>`;
                 sourceEl.style.display = '';
               } else {
-                // Plain text source
-                sourceEl.textContent = src;
+                // Plain text source (prefix with label)
+                sourceEl.innerHTML = `<strong>Source:</strong> ${escapeHtml(src)}`;
                 sourceEl.style.display = '';
               }
             } else {
@@ -687,6 +687,11 @@
             }
           }
         } catch (e) { /* ignore errors populating source */ }
+
+        // Helper to escape HTML for plain text sources
+        function escapeHtml(unsafe) {
+          return String(unsafe).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;");
+        }
 
         // Display as formatted markdown HTML
         const postBody = document.getElementById('postContent');

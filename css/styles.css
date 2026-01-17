@@ -173,7 +173,9 @@ body.note-theme, html.note-theme {
 .post-page .back-btn,
 .post-page .btn,
 .post-page #goTopBtn {
-  background: var(--theme-color);
+  /* Match the top button visual: black circular base, keep theme color for border accents */
+  background: #000;
+  background-image: none;
   border-color: var(--theme-color);
   color: var(--cream);
 }
