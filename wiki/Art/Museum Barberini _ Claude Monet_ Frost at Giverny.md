@@ -7,10 +7,19 @@ description: "Frost at Giverny (1885) by Claude Monet — details and exhibition
 tags:
   - "art"
   - "clippings"
-color: brown
+color: white
+banner: https://muse-store.de/media/image/ff/f5/e8/1216104364_RAUREIF-GIVERNY-MONET-KunstdruckjaNlSuR9x0oRR.jpg
 ---
 
 ## Frost at Giverny (1885)
+
+<p align="center">
+  <img 
+    src="https://www.museum-barberini.de/collection-images/MB-Mon-18_Monet_Raureif-in-Giverny_2.jpg?w=1600"
+    alt="Frost at Giverny by Claude Monet"
+    style="max-width:100%;height:auto;box-shadow:0 2px 8px rgba(0,0,0,0.15);border-radius:8px;"
+  />
+</p>
 
 **Claude Monet** (1840–1926)
 

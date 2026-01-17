@@ -2,11 +2,10 @@
 title: "Canaletto — The Grand Canal, Venice"
 source: "https://www.metmuseum.org/art/collection/search/438102"
 banner: https://collectionapi.metmuseum.org/api/collection/v1/iiif/438100/1328084/main-image
-date: 1730s
-created: 2026-01-17
+date: 2026-01-17
 description: "Canaletto's panoramic view of the Grand Canal, assembled from on-site drawings and studio work."
 tags: #art
-color: brown
+color: white
 ---
 ## The Grand Canal, Venice, Looking Southeast, with the Campo della Carità to the Right
 
