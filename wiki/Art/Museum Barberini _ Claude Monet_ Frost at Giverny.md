@@ -4,9 +4,7 @@ source: "https://sammlung.museum-barberini.de/en/MB-Mon-18_claude-monet-frost-at
 date: 1885
 created: 2026-01-17
 description: "Frost at Giverny (1885) by Claude Monet — details and exhibition history." 
-tags:
-  - "art"
-  - "clippings"
+tags: #art
 color: white
 banner: https://www.museum-barberini.de/collection-images/MB-Mon-18_Monet_Raureif-in-Giverny_1.jpg?w=1600
 ---
