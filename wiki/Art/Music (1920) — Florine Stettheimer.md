@@ -5,9 +5,7 @@ banner: "https://www.arthistoryproject.com/site/assets/files/20925/florine-stett
 date: 1920
 created: 2026-01-17
 description: "Music (1920) by Florine Stettheimer — Surrealist oil on canvas, Rose Art Museum (public domain image)."
-tags:
-  - "art"
-  - "clippings"
+tags: #art
 color: brown
 ---
 
