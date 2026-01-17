@@ -10,9 +10,10 @@ description:
 tags: #Art #wiki
 date: Last Ediedt : 2026-01-17
 color: white
+source : https://www.youtube.com/watch?v=UOkscKuXP4k&t=865s
 ---
 
-# Black Paintings
+# Black Paintings : 
 The **Black Paintings** (Spanish: ***Pinturas negras***) is the name given to a group of 14 paintings by [Francisco Goya](https://en.wikipedia.org/wiki/Francisco_Goya "Francisco Goya") from the later years of his life, probably between 1820 and 1823. They portray intense, haunting themes, reflective of both his fear of insanity and his bleak outlook on humanity. In 1819, at the age of 72, Goya moved into a two-storey house outside Madrid that was called *[Quinta del Sordo](https://en.wikipedia.org/wiki/Quinta_del_Sordo "Quinta del Sordo")* (*Deaf Man's Villa*). It is thought that Goya began the paintings in the following year.[^1] Although the house had been named after the previous owner, who was deaf, Goya too was nearly deaf at the time as a result of an unknown illness he had suffered when he was 46. The paintings originally were painted as murals on the walls of the house, later being "hacked off" the walls and attached to canvas by owner [Baron Frédéric Émile d'Erlanger.](https://en.wikipedia.org/wiki/Fr%C3%A9d%C3%A9ric_%C3%89mile_d%27Erlanger "Frédéric Émile d'Erlanger")[^2] They are now in the [Museo del Prado](https://en.wikipedia.org/wiki/Museo_del_Prado "Museo del Prado") in Madrid.[^3]
 
 After the [Napoleonic Wars](https://en.wikipedia.org/wiki/Napoleonic_Wars "Napoleonic Wars") and the internal turmoil of the changing [Spanish government](https://en.wikipedia.org/wiki/History_of_Spain_\(1810%E2%80%9373\) "History of Spain (1810–73)"), Goya developed an embittered attitude toward mankind. He had an acute, first-hand awareness of panic, terror, fear and hysteria. He had survived two near-fatal illnesses, and grew increasingly anxious and impatient in fear of relapse. The combination of these factors is thought to have led to his production of the *Black Paintings*. Using oil paints and working directly on the walls of his dining and sitting rooms, Goya created works with dark, disturbing themes. The paintings were not commissioned and were not meant to leave his home. It is likely that the artist never intended the works for public exhibition: "these paintings are as close to being hermetically private as any that have ever been produced in the history of Western art." [^4]
@@ -178,13 +179,19 @@ function updateSlider() {
 }
 </script>
 
-## History
+## History : 
 
-![](https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Casa_de_la_Quinta_de_Goya%2C_o_Quinta_del_Sordo%2C_desde_atr%C3%A1s%2C_en_el_Modelo_de_Madrid_de_1828-1830.JPG/500px-Casa_de_la_Quinta_de_Goya%2C_o_Quinta_del_Sordo%2C_desde_atr%C3%A1s%2C_en_el_Modelo_de_Madrid_de_1828-1830.JPG)
+<div style="max-width:100%;overflow-x:auto;text-align:center;">
+	<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Casa_de_la_Quinta_de_Goya%2C_o_Quinta_del_Sordo%2C_desde_atr%C3%A1s%2C_en_el_Modelo_de_Madrid_de_1828-1830.JPG/500px-Casa_de_la_Quinta_de_Goya%2C_o_Quinta_del_Sordo%2C_desde_atr%C3%A1s%2C_en_el_Modelo_de_Madrid_de_1828-1830.JPG" alt="The Quinta del Sordo, scale model" style="width:100%;height:auto;max-width:500px;">
+</div>
 
-The Quinta del Sordo, in a scale model built between 1828 and 1830, at the Museo de Historia de Madrid (Museum of History). 7
+<div style="text-align:center;font-size:0.95em;">
+	The Quinta del Sordo, in a scale model built between 1828 and 1830, at the Museo de Historia de Madrid (Museum of History).
+</div>
 
-![](https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Quintasordo.svg/500px-Quintasordo.svg.png)
+<div style="max-width:100%;overflow-x:auto;text-align:center;">
+	<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Quintasordo.svg/500px-Quintasordo.svg.png" alt="Diagram of the possible locations of the Black Paintings in La Quinta de Goya" style="width:100%;height:auto;max-width:500px;">
+</div>
 
 Diagram of the possible locations of the Black Paintings in La Quinta de Goya
 
@@ -194,7 +201,7 @@ If the light-toned bucolic paintings are also the works of Goya, it may be that 
 
 The slow process of [transferring](https://en.wikipedia.org/wiki/Transfer_of_panel_paintings "Transfer of panel paintings") the murals onto canvas began in 1874. The walls of the villa had been covered in wallpaper and Goya had painted on top of this layer which was carefully removed and reapplied to canvas. This work was carried out under the supervision of [Salvador Martínez Cubells](https://en.wikipedia.org/wiki/Salvador_Mart%C3%ADnez_Cubells "Salvador Martínez Cubells") at the request of [Baron Émile d’Erlanger](https://en.wikipedia.org/wiki/Fr%C3%A9d%C3%A9ric_%C3%89mile_d%27Erlanger "Frédéric Émile d'Erlanger"),[^12] a French banker of German origins, who wanted to sell them at the [Paris World's Fair](https://en.wikipedia.org/wiki/Exposition_Universelle_\(1878\) "Exposition Universelle (1878)") in 1878. However, in 1881 the baron donated the paintings to the Spanish state and they are now on display at the [Museo del Prado](https://en.wikipedia.org/wiki/Museo_del_Prado "Museo del Prado").[^13]
 
-## Authenticity
+## Authenticity : 
 
 Art historian Juan José Junquera has questioned the authenticity of the *Black Paintings*. In 2003, he came to the conclusion that they could not have been painted during Goya's lifetime.[^20] [^21] According to Junquera, contemporary legal documents describe the Quinta del Sordo as a villa with only one floor, and the second storey was not added until after Goya's death. If the upper floor did not exist during Goya's time, then the *Black Paintings* (or at least those found on the upper floor) could not have been the work of Goya. He speculates that Goya's son Javier may have created the paintings, and Javier's son Mariano passed them off as the work of Goya for financial gain. Junquera's theory was rejected by Goya scholar [Nigel Glendinning](https://en.wikipedia.org/wiki/Nigel_Glendinning "Nigel Glendinning"), who published an academic study defending the paintings' authenticity and later held a lecture in Madrid restating his conviction. Today, Museo del Prado recognises the *Black Paintings* as authentic.[^22] [^23] [^24]
 

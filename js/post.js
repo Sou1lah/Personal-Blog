@@ -658,6 +658,36 @@
           document.getElementById('postDate').textContent = "Note";
         }
 
+        // Show source (from frontmatter `source:`) under the date when provided
+        try {
+          const sourceEl = document.getElementById('postSource');
+          if (sourceEl) {
+            if (data && data.source) {
+              let src = String(data.source).trim();
+              // Support markdown-style link: [text](url)
+              const md = src.match(/\[([^\]]+)\]\(([^)]+)\)/);
+              if (md) {
+                const text = md[1]; const url = md[2];
+                sourceEl.innerHTML = `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+                sourceEl.style.display = '';
+              } else if (/^https?:\/\//i.test(src)) {
+                // Show hostname-friendly label, keep full URL on hover
+                let label = src;
+                try { label = (new URL(src)).hostname.replace(/^www\./, ''); } catch(e) {}
+                sourceEl.innerHTML = `<a href="${src}" target="_blank" rel="noopener noreferrer" title="${src}">${label}</a>`;
+                sourceEl.style.display = '';
+              } else {
+                // Plain text source
+                sourceEl.textContent = src;
+                sourceEl.style.display = '';
+              }
+            } else {
+              sourceEl.style.display = 'none';
+              sourceEl.textContent = '';
+            }
+          }
+        } catch (e) { /* ignore errors populating source */ }
+
         // Display as formatted markdown HTML
         const postBody = document.getElementById('postContent');
         postBody.innerHTML = container.innerHTML;
