@@ -5,9 +5,7 @@ banner: https://collectionapi.metmuseum.org/api/collection/v1/iiif/438100/132808
 date: 1730s
 created: 2026-01-17
 description: "Canaletto's panoramic view of the Grand Canal, assembled from on-site drawings and studio work."
-tags:
-  - "art"
-  - "clippings"
+tags: #art
 color: brown
 ---
 ## The Grand Canal, Venice, Looking Southeast, with the Campo della Carità to the Right
