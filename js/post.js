@@ -343,13 +343,25 @@
     const params = new URLSearchParams(window.location.search);
     const postId = params.get('id');
     const notePath = params.get('note');
+    const slug = params.get('slug');
 
     // Show placeholders while we decide / fetch content
     setLoadingState(true);
 
     // Load blog post or note
-    if (notePath) {
-      // Load note from wiki
+    if (slug) {
+      // Resolve slug -> mapping in sessionStorage
+      let mapping = null;
+      try { mapping = JSON.parse(sessionStorage.getItem('note_map:' + slug)); } catch (e) { mapping = null; }
+      if (mapping && mapping.source === 'drive') {
+        loadNoteContent({ drive: true, download_url: mapping.download_url, id: mapping.id, title: mapping.title });
+      } else {
+        document.getElementById('postTitle').textContent = "Note Not Found";
+        document.getElementById('postContent').textContent = "This note cannot be found (missing mapping).";
+        setLoadingState(false);
+      }
+    } else if (notePath) {
+      // Load note from wiki (legacy behavior)
       loadNoteContent(notePath);
     } else if (postId && postsData[postId]) {
       // Load blog post
@@ -365,15 +377,94 @@
       setLoadingState(false);
     }
 
-    async function loadNoteContent(path) {
+    async function loadNoteContent(pathOrObj) {
       try {
+        // Accept either a slug-mapping object {drive:true,download_url,id,...} or a legacy path string
+        let path = null;
+        let rawUrl = null;
+        if (typeof pathOrObj === 'object' && pathOrObj && pathOrObj.drive) {
+          // If mapping was provided directly, use its download_url
+          rawUrl = pathOrObj.download_url;
+        } else {
+          path = String(pathOrObj || '');
+        }
+
+        // Require unlock before fetching note content
+        const UNLOCK_KEY = 'blog_unlocked';
+        const CORRECT_PASSWORD = (typeof window !== 'undefined' && window.__BLOG_PASSWORD) ? window.__BLOG_PASSWORD : 'ishowspeed';
+        if (!window || !window.__BLOG_PASSWORD) console.debug('Using fallback blog password from source. To inject via CI, create a config.js with window.__BLOG_PASSWORD = "..."');
+        if (sessionStorage.getItem(UNLOCK_KEY) !== 'true') {
+          // Use modal-based prompt on post page so users always see the popout
+          const loginModal = document.getElementById('loginModal');
+          const loginPasswordInput = document.getElementById('loginPasswordInput');
+          const submitLoginBtn = document.getElementById('submitLoginBtn');
+          const cancelLoginBtn = document.getElementById('cancelLoginBtn');
+
+          // Fallback to simple prompt if modal is missing
+          if (!loginModal) {
+            const pass = prompt('This content is locked. Enter password to unlock:');
+            if (pass === CORRECT_PASSWORD) sessionStorage.setItem(UNLOCK_KEY, 'true');
+            else { alert('Content locked'); window.location.href = 'index.html'; return; }
+          } else {
+            // Promise-based modal flow
+            await new Promise((resolve, reject) => {
+              function cleanup() {
+                loginModal.style.display = 'none';
+                loginModal.removeEventListener('click', overlayClose);
+                window.removeEventListener('keydown', escHandler);
+                submitLoginBtn.onclick = null;
+                cancelLoginBtn.onclick = null;
+                loginPasswordInput.onkeydown = null;
+              }
+              const doSubmit = () => {
+                const val = loginPasswordInput.value || '';
+                if (val === CORRECT_PASSWORD) { sessionStorage.setItem(UNLOCK_KEY, 'true'); cleanup(); resolve(); }
+                else { alert('Incorrect password'); }
+              };
+              const overlayClose = (e) => { /* prevent closing by clicking overlay to ensure users see prompt on-entry */ };
+              const escHandler = (e) => { if (e.key === 'Escape') { /* ignore Escape during required prompt */ } };
+
+              loginModal.style.display = 'flex';
+              loginPasswordInput.value = '';
+              loginPasswordInput.focus();
+
+              submitLoginBtn.onclick = doSubmit;
+              cancelLoginBtn.onclick = () => { cleanup(); reject(new Error('cancelled')); };
+              loginPasswordInput.onkeydown = (e) => { if (e.key === 'Enter') doSubmit(); };
+              loginModal.addEventListener('click', overlayClose);
+              window.addEventListener('keydown', escHandler);
+            }).catch(() => { alert('Content locked'); window.location.href = 'index.html'; return; });
+          }
+        }
         // show loading placeholders while fetching remote note
         setLoadingState(true);
         const isLocal = window.location.hostname === '127.0.0.1';
-        const base = isLocal ? '' : GITHUB_RAW;
-        const rawUrl = `${base}/${path.split('/').map(encodeURIComponent).join('/')}`;
+
+        // If rawUrl not already set (i.e., not a mapping object), build it from path
+        if (!rawUrl) {
+          if (path && path.startsWith('drive/')) {
+            const id = path.split('/').slice(-1)[0];
+            const key = (typeof window !== 'undefined' && window.__GOOGLE_DRIVE_API_KEY) ? window.__GOOGLE_DRIVE_API_KEY : '';
+            rawUrl = `https://www.googleapis.com/drive/v3/files/${id}?alt=media${key ? '&key=' + encodeURIComponent(key) : ''}`;
+          } else {
+            const base = isLocal ? '' : GITHUB_RAW;
+            rawUrl = `${base}/${path.split('/').map(encodeURIComponent).join('/')}`;
+          }
+        }
+
         // Cache-bust note fetch so edits to frontmatter (e.g., `text:` or `color:`) appear immediately
-        const response = await fetch(rawUrl + '?t=' + Date.now(), { cache: 'no-store' });
+        const sep = rawUrl.includes('?') ? '&' : '?';
+        const response = await fetch(`${rawUrl}${sep}t=${Date.now()}`, { cache: 'no-store' });
+
+        // Runtime diagnostics: warn if stylesheet missing on post page (helps debugging broken style issues)
+        try {
+          document.addEventListener('DOMContentLoaded', () => {
+            const link = document.querySelector('link[href="css/styles.css"]');
+            if (!link) {
+              console.error('Missing stylesheet link on post page: css/styles.css');
+            }
+          });
+        } catch (e) { /* ignore */ }
         
         if (!response.ok) {
           throw new Error('Failed to load note');

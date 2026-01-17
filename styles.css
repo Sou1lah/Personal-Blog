@@ -1,4 +1,4 @@
-:root {
+root {
 	--brown: #24221b;
 	--cream: #e4dcc9;
 	--primary: #24221b;
@@ -325,17 +325,14 @@ body::-webkit-scrollbar {
 }
 
 /* Header */
-/* Make the header span the full width of the surrounding .container and avoid duplicate borders
-   (header previously used a 50% width and replicated container borders which caused visual misalignment) */
-.site-header { width: 100%; margin: 0; border: none; display: flex; align-items: center; justify-content: space-between; padding: 16px 0; position: relative; margin-bottom: 12px; }
+.site-header { width: 50%; margin: 0 auto; border-left: 3px solid var(--brown); border-right: 3px solid var(--brown); border-bottom: 3px solid var(--brown); display: flex; align-items: center; justify-content: space-between; padding: 16px; position: relative; margin-bottom: 12px; }
 .site-header::after {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
   height: 3px;
-  /* keep the decorative bar just below the header but avoid overlapping the container border */
-  bottom: -8px;
+  bottom: -12px; /* sits just below the header inside the container */
   background: var(--brown);
   border-radius: 3px;
   z-index: 1;
@@ -444,20 +441,6 @@ body::-webkit-scrollbar {
 
 .btn { display:inline-block; border-radius:50px; background: var(--brown); color: var(--cream); text-decoration:none; padding:6px 12px; font-weight:700; letter-spacing:1px; align-self:flex-end; margin: 0 12px 12px 0; font-size: 14px; }
 .btn:hover { background: var(--cream); color: var(--brown); border:3px solid var(--brown); }
-
-/* Login button in header */
-.login-btn { border:3px solid var(--brown); padding:6px 10px; border-radius:50px; background:var(--cream); color:var(--brown); display:inline-flex; align-items:center; gap:8px; cursor:pointer; }
-.login-btn:hover { background:var(--brown); color:var(--cream); }
-.login-btn.logged { background: #22c55e; border-color: #22c55e; color: white; }
-.login-btn.logged:hover { background: #16a34a; border-color: #16a34a; }
-
-/* Card lock button replaces Read link — same sizing but icon-only by default */
-.lock-btn { display:inline-flex; align-items:center; justify-content:center; width:44px; height:36px; min-width:44px; padding:0; border-radius:50px; background:var(--brown); color:var(--cream); border:3px solid var(--brown); font-weight:700; cursor:pointer; }
-.lock-btn svg { width:18px; height:18px; }
-.lock-btn.unlocked { background:var(--note-accent, var(--brown)); color:var(--cream); }
-.lock-btn.unlocked:hover { background:var(--cream); color:var(--note-accent, var(--brown)); border-color:var(--note-accent, var(--brown)); }
-.lock-btn.read { width: auto; min-width: 64px; padding: 6px 14px; border-radius: 50px; font-size: 14px; }
-.lock-btn.read:hover { background: var(--cream); color: var(--note-accent, var(--brown)); border-color: var(--note-accent, var(--brown)); }
 
 .footer-sep {
   display: none; /* hidden on desktop */

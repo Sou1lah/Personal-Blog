@@ -29,6 +29,9 @@
       notesCardsContainer.innerHTML = '<p style="text-align: center; padding: 40px; font-size: 1.1rem; color: rgba(36, 34, 27, 0.7);">Loading notes...</p>';
 
       try {
+        // If Drive is configured, always refresh from Drive so new uploads appear immediately
+        if (typeof window !== 'undefined' && window.__DRIVE_FOLDER_ID) forceFetch = true;
+
         // Use localStorage cache unless forceFetch is true
       let categories = {};
       if (!forceFetch) {
@@ -125,18 +128,64 @@
             categories = built;
             try { localStorage.setItem('wikiNotesCache', JSON.stringify(categories)); } catch (e) {}
           } else {
-            try {
-              categories = await fetchAllMarkdownFiles(GITHUB_API);
-            } catch (githubErr) {
-              console.warn('GitHub API failed, attempting local /wiki fallback:', githubErr);
+            // No index.json: try Google Drive first if configured
+            if (typeof window !== 'undefined' && window.__DRIVE_FOLDER_ID && window.__GOOGLE_DRIVE_API_KEY) {
               try {
-                categories = await fetchAllMarkdownFilesLocal();
-              } catch (localErr) {
-                console.error('Local /wiki fallback failed:', localErr);
-                throw githubErr;
+                const driveFiles = await (async function fetchDriveFilesRec(folderId, apiKey, parentPath = '') {
+                  const q = encodeURIComponent(`'${folderId}'+in+parents+and+trashed=false`);
+                  const url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,mimeType,parents)&pageSize=500&key=${apiKey}`;
+                  const resp = await fetch(url);
+                  if (!resp.ok) throw new Error('Drive files list failed');
+                  const data = await resp.json();
+                  const result = {};
+                  result[parentPath || 'Root'] = result[parentPath || 'Root'] || [];
+                  for (const f of data.files || []) {
+                    const lower = (f.name || '').toLowerCase();
+                    if (f.mimeType === 'application/vnd.google-apps.folder') {
+                      // Recurse into subfolder and merge results
+                      try {
+                        const subPath = parentPath ? `${parentPath}/${f.name}` : f.name;
+                        const sub = await fetchDriveFilesRec(f.id, apiKey, subPath);
+                        for (const [k, v] of Object.entries(sub)) {
+                          if (!result[k]) result[k] = [];
+                          result[k] = result[k].concat(v);
+                        }
+                      } catch (e) {
+                        console.warn('Failed to recurse into folder', f.name, e);
+                      }
+                    } else if (lower.endsWith('.md') || lower.endsWith('.markdown') || f.mimeType === 'text/markdown' || f.mimeType === 'text/plain') {
+                      const key = parentPath || 'Root';
+                      result[key] = result[key] || [];
+                      result[key].push({ name: f.name, path: `drive/${f.id}`, download_url: `https://www.googleapis.com/drive/v3/files/${f.id}?alt=media&key=${apiKey}` });
+                    }
+                  }
+                  return result;
+                })(window.__DRIVE_FOLDER_ID, window.__GOOGLE_DRIVE_API_KEY);
+                // Merge driveFiles into categories if any
+                if (driveFiles && Object.keys(driveFiles).length) {
+                  categories = driveFiles;
+                  try { localStorage.setItem('wikiNotesCache', JSON.stringify(categories)); } catch (e) {}
+                }
+              } catch (driveErr) {
+                console.warn('Google Drive fetch failed:', driveErr);
               }
             }
-            try { localStorage.setItem('wikiNotesCache', JSON.stringify(categories)); } catch (e) {}
+
+            // Fall back to GitHub API or local /wiki if Drive not used or empty
+            if (!Object.keys(categories).length) {
+              try {
+                categories = await fetchAllMarkdownFiles(GITHUB_API);
+              } catch (githubErr) {
+                console.warn('GitHub API failed, attempting local /wiki fallback:', githubErr);
+                try {
+                  categories = await fetchAllMarkdownFilesLocal();
+                } catch (localErr) {
+                  console.error('Local /wiki fallback failed:', localErr);
+                  throw githubErr;
+                }
+              }
+              try { localStorage.setItem('wikiNotesCache', JSON.stringify(categories)); } catch (e) {}
+            }
           }
         } catch (e) {
           // If all fetching fails, categories remains empty and error will be handled below
@@ -155,6 +204,8 @@
         }
 
         let html = '';
+        const noteMappings = []; // { slug, download_url, id, title, category }
+        function slugify(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
         for (const [category, items] of Object.entries(categories)) {
           if (items.length === 0) continue;
 
@@ -165,17 +216,28 @@
             if (path.startsWith('wiki/wiki/')) {
               path = path.replace('wiki/wiki/', 'wiki/');
             }
-            // Use file.download_url if present and starts with / (local), else build GitHub raw URL
+            // Prefer an explicit download_url (local or remote). For Google Drive entries we set full URLs in download_url.
             let rawUrl;
-            if (file.download_url && file.download_url.startsWith('/wiki/')) {
+            if (file.download_url) {
               rawUrl = file.download_url;
+            } else if (path && path.startsWith('drive/')) {
+              const id = path.split('/').slice(-1)[0];
+              rawUrl = `https://www.googleapis.com/drive/v3/files/${id}?alt=media&key=${window.__GOOGLE_DRIVE_API_KEY || ''}`;
             } else {
               rawUrl = `${GITHUB_RAW}/${path.split('/').map(encodeURIComponent).join('/')}`;
             }
-            if (rawUrl.includes('wiki/wiki/')) {
+            if (rawUrl && rawUrl.includes('wiki/wiki/')) {
               rawUrl = rawUrl.replace('wiki/wiki/', 'wiki/');
             }
             console.log('Raw note URL:', rawUrl);
+
+            // generate a slug for Drive-sourced notes (to hide /drive/ in URLs)
+            let slug = '';
+            if (rawUrl && rawUrl.includes('drive/v3/files')) {
+              const id = (path && path.startsWith('drive/')) ? path.split('/').slice(-1)[0] : (file.name ? file.name.replace(/[^a-z0-9]/gi,'').slice(0,12) : Math.random().toString(36).slice(2,8));
+              slug = `${slugify(title)}-${Math.random().toString(36).slice(2,8)}`;
+              noteMappings.push({ slug, download_url: rawUrl, id, title, category });
+            }
 
             // Synchronously add a placeholder for tags, to be filled after fetch
             const cardId = `card-${category.replace(/[^a-zA-Z0-9]/g, '')}-${file.name.replace(/[^a-zA-Z0-9]/g, '')}`;
@@ -189,7 +251,9 @@
                     <div class="note-tags" style="display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; padding-bottom: 2px; -webkit-overflow-scrolling: touch; max-width: 100%; position: relative;"></div>
                     <div class="tags-fade" style="position: absolute; right: 0; top: 0; width: 40px; height: 100%; pointer-events: none; background: linear-gradient(to right, transparent, rgba(245,240,230,0.6) 95%);"></div>
                   </div>
-                  <a href="post.html?note=${encodeURIComponent(path)}" class="btn" style="flex: 0 0 auto; padding: 8px 12px; margin: 0;">Read</a>
+                  <button class="btn lock-btn" ${slug ? `data-slug="${slug}"` : `data-note="${encodeURIComponent(path)}"`} style="flex: 0 0 auto; padding: 0; margin: 0;" title="Locked" aria-label="Locked">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0110 0v4"></path></svg>
+                  </button>
                 </div>
                 <style>
                   .note-tags::-webkit-scrollbar {
@@ -207,6 +271,150 @@
         }
 
         notesCardsContainer.innerHTML = html;
+
+        notesCardsContainer.innerHTML = html;
+
+        // Insert lock button behavior and login handling
+        // Register slug -> Drive file mappings in sessionStorage so post pages can fetch without exposing Drive in URLs
+        try {
+          if (typeof sessionStorage !== 'undefined' && Array.isArray(noteMappings) && noteMappings.length) {
+            noteMappings.forEach(m => {
+              try { sessionStorage.setItem(`note_map:${m.slug}`, JSON.stringify({ source: 'drive', id: m.id, download_url: m.download_url, title: m.title, category: m.category })); } catch (e) {}
+            });
+          }
+        } catch (e) {}
+
+        const UNLOCK_KEY = 'blog_unlocked';
+        const CORRECT_PASSWORD = (typeof window !== 'undefined' && window.__BLOG_PASSWORD) ? window.__BLOG_PASSWORD : 'ishowspeed'; // prefer injected password (via config.js), fallback to local value
+        if (!window || !window.__BLOG_PASSWORD) console.debug('Using fallback blog password from source. To inject via CI, create a config.js with window.__BLOG_PASSWORD = "..."');
+        const loginBtnEl = document.getElementById('loginBtn');
+        const loginModal = document.getElementById('loginModal');
+        const loginPasswordInput = document.getElementById('loginPasswordInput');
+        const cancelLoginBtn = document.getElementById('cancelLoginBtn');
+        const submitLoginBtn = document.getElementById('submitLoginBtn');
+
+        function isUnlocked() { return sessionStorage.getItem(UNLOCK_KEY) === 'true'; }
+        function setUnlocked(v) { sessionStorage.setItem(UNLOCK_KEY, v ? 'true' : 'false'); updateLoginUI(); }
+        function updateLoginUI() {
+          const lockBtns = notesCardsContainer.querySelectorAll('.lock-btn');
+          lockBtns.forEach(btn => {
+            if (isUnlocked()) {
+              // visual 'unlocked' state and show 'Read' label
+              btn.classList.add('unlocked');
+              btn.classList.add('read');
+              btn.setAttribute('aria-label', 'Read');
+              btn.innerHTML = '<span class="read-label">Read</span>';
+            } else {
+              // locked state: revert to padlock icon
+              btn.classList.remove('unlocked');
+              btn.classList.remove('read');
+              btn.setAttribute('aria-label', 'Locked');
+              btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0110 0v4"></path></svg>';
+            }
+          });
+          if (loginBtnEl) {
+            const span = loginBtnEl.querySelector('span');
+            if (span) span.textContent = isUnlocked() ? 'Logged' : 'Login';
+            if (isUnlocked()) loginBtnEl.classList.add('logged'); else loginBtnEl.classList.remove('logged');
+          }
+        }
+
+        function openLoginModal(onSuccess) {
+          if (!loginModal) {
+            const pass = prompt('Enter password to unlock:');
+            if (pass === CORRECT_PASSWORD) { setUnlocked(true); if (onSuccess) onSuccess(); }
+            return;
+          }
+          loginModal.style.display = 'flex';
+          loginPasswordInput.value = '';
+          loginPasswordInput.focus();
+          // Attach one-time handler for submit
+          const doSubmit = () => {
+            const val = loginPasswordInput.value || '';
+            if (val === CORRECT_PASSWORD) {
+              setUnlocked(true);
+              loginModal.style.display = 'none';
+              // remove overlay & key handlers
+              loginModal.removeEventListener('click', overlayClose);
+              window.removeEventListener('keydown', escHandler);
+              if (onSuccess) onSuccess();
+            } else {
+              alert('Incorrect password');
+            }
+          };
+          const overlayClose = (e) => { if (e.target === loginModal) { loginModal.style.display = 'none'; loginModal.removeEventListener('click', overlayClose); window.removeEventListener('keydown', escHandler); } };
+          const escHandler = (e) => { if (e.key === 'Escape') { loginModal.style.display = 'none'; loginModal.removeEventListener('click', overlayClose); window.removeEventListener('keydown', escHandler); } };
+          submitLoginBtn.onclick = doSubmit;
+          cancelLoginBtn.onclick = () => { loginModal.style.display = 'none'; loginModal.removeEventListener('click', overlayClose); window.removeEventListener('keydown', escHandler); };
+          loginPasswordInput.onkeydown = (e) => { if (e.key === 'Enter') doSubmit(); };
+          loginModal.addEventListener('click', overlayClose);
+          window.addEventListener('keydown', escHandler);
+        }
+
+        if (loginBtnEl) {
+          // Toggle login / logout
+          loginBtnEl.addEventListener('click', (e) => {
+            if (isUnlocked()) { setUnlocked(false); alert('Logged out'); } else { openLoginModal(); }
+          });
+        }
+
+        updateLoginUI();
+
+        // If not unlocked, automatically show the login modal on entry
+        if (!isUnlocked()) {
+          // small delay so UI renders before opening modal
+          setTimeout(() => { openLoginModal(); }, 50);
+        }
+
+        // Simple runtime sanity check: detect if core stylesheet failed to load and warn in console visibly
+        document.addEventListener('DOMContentLoaded', () => {
+          const link = document.querySelector('link[href="css/styles.css"]');
+          function showStyleBanner(msg) {
+            try {
+              const b = document.createElement('div');
+              b.textContent = msg;
+              Object.assign(b.style, { position: 'fixed', top: '0', left: '0', right: '0', background: '#ffa', color: '#000', padding: '8px 12px', borderBottom: '2px solid #c00', zIndex: 99999, textAlign: 'center', fontWeight: '700' });
+              document.body.appendChild(b);
+            } catch (e) { /* ignore */ }
+          }
+          if (!link) {
+            console.error('Missing stylesheet link: css/styles.css');
+            showStyleBanner('Warning: stylesheet css/styles.css not found — check your file path');
+            return;
+          }
+          setTimeout(() => {
+            try {
+              const rules = link.sheet && link.sheet.cssRules;
+              if (!rules || rules.length === 0) {
+                console.warn('styles.css appears empty or failed to load', link.href);
+                showStyleBanner('Warning: styles may not be applied — check browser console/network for css/styles.css');
+              }
+            } catch (e) {
+              console.warn('Cannot access stylesheet rules (cross-origin or not loaded):', e);
+              showStyleBanner('Warning: styles may not be applied — check browser console/network');
+            }
+          }, 300);
+        });
+
+        // Attach behavior to card lock buttons
+        function attachLockHandlers() {
+          const lockBtns = notesCardsContainer.querySelectorAll('.lock-btn');
+          lockBtns.forEach(btn => {
+            const noteSlug = btn.getAttribute('data-slug');
+            const notePath = btn.getAttribute('data-note');
+            btn.addEventListener('click', (e) => {
+              const targetUrl = noteSlug ? `post.html?slug=${encodeURIComponent(noteSlug)}` : `post.html?note=${notePath}`;
+              // If unlocked, navigate to post
+              if (isUnlocked()) {
+                window.location = targetUrl;
+              } else {
+                openLoginModal(() => { window.location = targetUrl; });
+              }
+            });
+          });
+        }
+
+        attachLockHandlers();
 
         const bannerElements = notesCardsContainer.querySelectorAll('.note-banner');
 
