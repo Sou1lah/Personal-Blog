@@ -8,7 +8,7 @@ tags:
   - "art"
   - "clippings"
 color: white
-banner: https://muse-store.de/media/image/ff/f5/e8/1216104364_RAUREIF-GIVERNY-MONET-KunstdruckjaNlSuR9x0oRR.jpg
+banner: https://www.museum-barberini.de/collection-images/MB-Mon-18_Monet_Raureif-in-Giverny_1.jpg?w=1600
 ---
 
 ## Frost at Giverny (1885)
