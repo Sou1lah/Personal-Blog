@@ -227,6 +227,11 @@
         const textColor = bgLum > 0.6 ? getComputedStyle(document.documentElement).getPropertyValue('--brown').trim() || '#24221b' : getComputedStyle(document.documentElement).getPropertyValue('--cream').trim() || '#e4dcc9';
         document.documentElement.style.setProperty('--theme-text', textColor);
 
+        // Choose gutter/header contrast based on background luminance: use black on light backgrounds, white on dark backgrounds
+        const gutterColor = (bgLum > 0.6) ? '#000' : '#fff';
+        document.documentElement.style.setProperty('--gutter-line', gutterColor);
+        document.documentElement.style.setProperty('--header-bar-color', gutterColor);
+
         if (page) {
           page.style.setProperty('--note-accent', accentHex);
           // accent the page borders and header divider for a full-page color theme
@@ -248,6 +253,9 @@
         document.documentElement.style.removeProperty('--theme-rgb');
         document.documentElement.style.removeProperty('--theme-bg');
         document.documentElement.style.removeProperty('--theme-text');
+        // Remove contrast-aware vars as well
+        document.documentElement.style.removeProperty('--gutter-line');
+        document.documentElement.style.removeProperty('--header-bar-color');
         if (page) {
           page.style.removeProperty('--note-accent');
           page.style.borderLeftColor = '';
@@ -460,14 +468,20 @@
         if (response.ok) {
           const ct = (response.headers.get('content-type') || '').toLowerCase();
           if (ct.includes('text/html') || ct.includes('application/json')) {
+            console.warn('Raw host returned', ct, 'for', rawUrl, '— attempting GitHub API raw endpoint fallback');
             try {
               const relPath = rawUrl.replace(`${GITHUB_RAW}/`, '').replace(/^\/+/, '');
               const apiUrlForFile = `https://api.github.com/repos/Sou1lah/Personal-Blog/contents/${relPath}`;
               const ghHeaders = { 'Accept': 'application/vnd.github.v3.raw' };
               if (typeof window !== 'undefined' && window.__GITHUB_TOKEN) ghHeaders['Authorization'] = `token ${window.__GITHUB_TOKEN}`;
               const arf = await fetch(apiUrlForFile, { headers: ghHeaders });
-              if (arf.ok) response = arf;
-            } catch (e) { /* ignore fallback errors */ }
+              if (arf.ok) {
+                console.info('GitHub API raw endpoint succeeded for', rawUrl);
+                response = arf;
+              } else {
+                console.warn('GitHub API raw endpoint returned', arf.status, 'for', rawUrl);
+              }
+            } catch (e) { console.warn('GitHub API raw fallback failed for', rawUrl, e); }
           }
         }
         if (!response.ok) {
@@ -478,8 +492,13 @@
             const ghHeaders = { 'Accept': 'application/vnd.github.v3.raw' };
             if (typeof window !== 'undefined' && window.__GITHUB_TOKEN) ghHeaders['Authorization'] = `token ${window.__GITHUB_TOKEN}`;
             const arf2 = await fetch(apiUrlForFile, { headers: ghHeaders });
-            if (arf2.ok) response = arf2;
-          } catch (e) { /* ignore */ }
+            if (arf2.ok) {
+              console.info('GitHub API raw last-resort fetch succeeded for', rawUrl);
+              response = arf2;
+            } else {
+              console.warn('GitHub API raw last-resort fetch returned', arf2.status, 'for', rawUrl);
+            }
+          } catch (e) { console.warn('GitHub API raw last-resort fetch failed for', rawUrl, e); }
         }
 
         // Runtime diagnostics: warn if stylesheet missing on post page (helps debugging broken style issues)
@@ -658,6 +677,31 @@
         window.addEventListener('resize', applyPostBodyPadding);
         // show content, hide skeletons
         setLoadingState(false);
+
+        // Position vertical gutters to align with the centered .container edges (helps lines appear adjacent to content)
+        function positionVerticalGutters() {
+          try {
+            const left = document.querySelector('.vertical-line.left');
+            const right = document.querySelector('.vertical-line.right');
+            const container = document.querySelector('.container');
+            if (!left || !right || !container) return;
+            const rect = container.getBoundingClientRect();
+            // Hide gutters on narrow viewports to avoid clutter
+            if (rect.width < 520 || window.innerWidth < 700) {
+              left.style.display = 'none'; right.style.display = 'none'; return;
+            }
+            // Position gutters at container edges (left = container.left, right = container.right - gutter width)
+            const gutterWidth = 3;
+            left.style.display = 'block';
+            right.style.display = 'block';
+            left.style.left = `${Math.max(0, Math.round(rect.left))}px`;
+            right.style.left = `${Math.max(0, Math.round(rect.right - gutterWidth))}px`;
+          } catch (e) { /* be robust */ }
+        }
+        // Run once and on resize/scroll so gutters follow responsive layout
+        positionVerticalGutters();
+        window.addEventListener('resize', positionVerticalGutters);
+        window.addEventListener('scroll', positionVerticalGutters);
         // Apply note color to content area (if provided)
         try {
           const themeMap = { brown: '#8B4513', blue: '#3b82f6', red: '#ef4444', green: '#22c55e', sky: '#06b6d4', purple: '#a855f7', pink: '#ec4899', orange: '#f97316', yellow: '#eab308', teal: '#14b8a6' };

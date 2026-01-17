@@ -8,17 +8,9 @@ created: 2026-01-17
 description:
 tags:
   - "clippings"
----
-<div style="display: flex; align-items: center;">
-<p>Mansion of the heirs of Goya in the Quinta del Sordo, Madrid, c. 1900. It was demolished in 1909.</p>
-<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Quinta_del_Sordo_1900.jpg/500px-Quinta_del_Sordo_1900.jpg" style="border-radius: 10px; margin-left: 20px;width: 200px" />
-</div>
-
-<div style="display: flex; align-items: center;">
-<p>Exposition Universelle (1878). Paris. On the left: Witches' Sabbath (The Great He-Goat)</p>
-<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Exposici%C3%B3n_Universal_de_Par%C3%ADs_de_1878%2C_Palacio_del_Trocadero%2C_arte_espa%C3%B1ol%2C_El_Aquelarre_de_Goya.jpg/500px-Exposici%C3%B3n_Universal_de_Par%C3%ADs_de_1878%2C_Palacio_del_Trocadero%2C_arte_espa%C3%B1ol%2C_El_Aquelarre_de_Goya.jpg" style="border-radius: 10px; margin-left: 20px;width: 200px" />
-</div>
-
+date: Last Ediedt : 2026-01-17
+banner: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/El_Aquelarre.jpg/1280px-El_Aquelarre.jpg"
+color: white
 ---
 
 # Black Paintings

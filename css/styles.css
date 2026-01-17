@@ -7,6 +7,9 @@
 	--theme-color: var(--accent); /* default theme color for notes */
 	/* RGB triplet used for subtle theme tints (set by JS when a note theme is applied) */
 	--theme-rgb: 36, 34, 27; /* default to brown */
+	/* Gutter and header bar colors should contrast with the page background. */
+	--gutter-line: var(--brown); /* vertical page gutters */
+	--header-bar-color: var(--theme-color); /* horizontal header bars */
 }
 /* Theme is applied to backgrounds, borders, and accents — text colors remain unchanged */
 .post-header h1 { color: var(--primary); }
@@ -31,7 +34,10 @@ body.note-theme, html.note-theme {
   background: var(--theme-bg, var(--theme-color)) !important;
   background-color: var(--theme-bg, var(--theme-color)) !important;
   color: var(--theme-text, var(--cream)) !important; /* ensure readable text on colored background */
-}
+  /* Surface-level variables so non-post elements (eg. fixed vertical gutters) inherit the correct contrast colors */
+  --gutter-line: var(--theme-text, var(--cream));
+  --header-bar-color: var(--theme-text, var(--brown));
+} 
 
 /* Post-scoped theming (uses CSS variables set by JS)
    These rules apply only to the post page so the rest of the site is unaffected */
@@ -139,11 +145,11 @@ body.note-theme, html.note-theme {
   left: 0; /* span the full width of the header (which is centered and constrained) */
   right: 0;
   height: 3px; /* match vertical border thickness */
-  background: var(--theme-color);
+  background: var(--header-bar-color, var(--theme-color));
   border-radius: 3px; /* slight rounding to match vertical corners */
   z-index: 10;
   transition: none !important;
-}
+} 
 /* disable the top bar */
 .post-header::before { display: none !important; }
 .post-header::after  { bottom: 10px; }
@@ -200,7 +206,7 @@ body::-webkit-scrollbar {
 	display: none;
 }
 
-.container { max-width: 960px; width: 50%; margin: 0 auto; padding: 16px; border-left: 3px solid var(--brown); border-right: 3px solid var(--brown); border-bottom: 3px solid var(--brown); }
+.container { max-width: 960px; width: 50%; margin: 0 auto; padding: 16px; border-left: 3px solid var(--gutter-line); border-right: 3px solid var(--gutter-line); border-bottom: 3px solid var(--gutter-line); } 
 
 /* Filter Section */
 .filter-section {
@@ -673,7 +679,10 @@ html.no-transitions *::after {
   background-image: none !important;
   background: transparent !important; /* let the page background (--theme-bg) be visible */
   color: var(--theme-text, var(--cream)) !important;
-}
+  /* Make gutters and header bars contrast against the text color used for the theme */
+  --gutter-line: var(--theme-text, var(--cream));
+  --header-bar-color: var(--theme-text, var(--brown));
+} 
 
 /* Make header and content match the note's page background for a seamless theme
    Remove surrounding box around header so only decoration (bars) remain */
@@ -735,16 +744,32 @@ html.no-transitions *::after {
 .post-banner {
   position: relative; /* contains overlay */
   overflow: hidden;
+  /* Extend banner to the container gutters so images fill the available horizontal space */
+  margin-left: -1em;
+  margin-right: -1em;
+  width: calc(100% + 2em);
+  max-width: none;
+  border-radius: 12px 12px 0 0; /* keep rounded top corners */
 }
 .post-banner img {
   opacity: 0;
   transition: opacity 420ms cubic-bezier(.2,.9,.2,1);
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: cover; /* ensure image fills the banner area */
   display: block;
 }
 .post-banner img.loaded { opacity: 1 !important; }
+
+/* Mobile tweaks: use pixel-based gutters on small screens to avoid large em-based offsets */
+@media (max-width:600px) {
+  .post-banner {
+    margin-left: -12px;
+    margin-right: -12px;
+    width: calc(100% + 24px);
+    border-radius: 0; /* full-bleed on small screens */
+  }
+}
 
 /* Theme-aware overlay that fades in with the banner image (creates the "fade into content" look) */
 .post-banner::after {
@@ -886,9 +911,12 @@ body[data-theme] .card-image {
   top: 0;
   bottom: 0;
   width: 3px;
-  background: #000;
-  z-index: 1;
+  background: var(--gutter-line, #24221b);
+  z-index: 100000; /* ensure visible above most elements */
+  pointer-events: none; /* don't block clicks */
+  opacity: 0.98;
 }
+
 
 .vertical-line.left {
   left: 0;

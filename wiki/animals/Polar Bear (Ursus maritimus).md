@@ -1,7 +1,7 @@
 ---
 banner: https://media3.s-nbcnews.com/i/streams/2014/February/140225/2D11741327-105187-lisa-granshawAAEA3BA7-DBD0-2809-3D75-A303123C3B8F.jpg
 tags: #animals #wiki 
-color: blue
+color: white
 date : 2024-06-15
 ---
 

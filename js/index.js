@@ -10,7 +10,7 @@
     // Load notes on page load
     loadNotesContent();
 
-    async function loadNotesContent(forceFetch = false) {
+    async function loadNotesContent(forceFetch = false, preferGitHub = false) {
       notesCardsContainer.innerHTML = '<p style="text-align: center; padding: 40px; font-size: 1.1rem; color: rgba(36, 34, 27, 0.7);">Loading notes...</p>';
 
       try {
@@ -83,6 +83,23 @@
           }
           return result;
         }
+
+        // If caller requested a forced GitHub fetch, try live listing now and skip index.json if it succeeds
+        if (preferGitHub) {
+          try {
+            const liveForced = await fetchAllMarkdownFiles(GITHUB_API);
+            if (liveForced && Object.keys(liveForced).length) {
+              console.log('Forced GitHub listing found — using live listing for wiki notes');
+              categories = liveForced;
+              try { localStorage.setItem('wikiNotesCache', JSON.stringify(categories)); } catch (e) {}
+            } else {
+              console.warn('Forced GitHub listing returned no files — falling back to index.json/local');
+            }
+          } catch (forcedErr) {
+            console.warn('Forced GitHub listing failed:', forcedErr);
+          }
+        }
+
         try {
           // Try index.json manifest first (local dev or GitHub raw)
           let indexList = null;
@@ -429,6 +446,20 @@
 
         attachLockHandlers();
 
+        // Refresh notes from GitHub button (forces GitHub-first refresh)
+        const refreshBtn = document.getElementById('refreshNotesBtn');
+        if (refreshBtn) {
+          refreshBtn.addEventListener('click', () => {
+            refreshBtn.disabled = true;
+            const origText = refreshBtn.textContent;
+            refreshBtn.textContent = 'Refreshing...';
+            loadNotesContent(true, true).finally(() => {
+              refreshBtn.disabled = false;
+              refreshBtn.textContent = origText || 'Refresh (GitHub)';
+            });
+          });
+        }
+
         const bannerElements = notesCardsContainer.querySelectorAll('.note-banner');
 
         // For card thumbnails we only need to set banners; skip content previews
@@ -440,6 +471,7 @@
             if (r.ok) {
               const ct = (r.headers.get('content-type') || '').toLowerCase();
               if (ct.includes('text/html') || ct.includes('application/json')) {
+                console.warn('Raw host returned', ct, 'for', rawUrl, '— attempting GitHub API raw endpoint fallback');
                 // Fallback to GitHub API raw endpoint (handles cases where raw host returns HTML or is blocked)
                 try {
                   const relPath = rawUrl.replace(`${GITHUB_RAW}/`, '').replace(/^\/+/, '');
@@ -447,8 +479,13 @@
                   const ghHeaders = { 'Accept': 'application/vnd.github.v3.raw' };
                   if (typeof window !== 'undefined' && window.__GITHUB_TOKEN) ghHeaders['Authorization'] = `token ${window.__GITHUB_TOKEN}`;
                   const arf = await fetch(apiUrlForFile, { headers: ghHeaders });
-                  if (arf.ok) r = arf;
-                } catch (e) { /* ignore fallback errors */ }
+                  if (arf.ok) {
+                    console.info('GitHub API raw endpoint succeeded for', rawUrl);
+                    r = arf;
+                  } else {
+                    console.warn('GitHub API raw endpoint returned', arf.status, 'for', rawUrl);
+                  }
+                } catch (e) { console.warn('GitHub API raw fallback failed for', rawUrl, e); }
               }
             }
             if (!r.ok) throw new Error('Failed to fetch markdown: ' + rawUrl);

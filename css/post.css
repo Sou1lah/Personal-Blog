@@ -353,8 +353,9 @@
   top: 0;
   bottom: 0;
   width: 3px;
-  background: var(--brown);
-  z-index: 1;
+  background: var(--gutter-line);
+  z-index: 9999; /* keep visible above most elements */
+  pointer-events: none; /* don't block clicks */
 }
 
 .vertical-line.left {

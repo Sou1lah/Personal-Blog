@@ -31,8 +31,14 @@
       </div>
 
       <div id="notesSection" style="display: block;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 12px;">
+          <h2 style="font-size: 1.2rem; margin:0;">Notes</h2>
+          <div>
+            <button id="refreshNotesBtn" style="padding:6px 12px; border-radius: 8px; background: var(--brown); color:var(--cream); border: none; cursor: pointer;">Refresh (GitHub)</button>
+          </div>
+        </div>
         <div id="notesCardsContainer" class="cards" aria-label="Notes content"></div>
-      </div>
+      </div> 
 
     </main>
   </div>
@@ -45,7 +51,7 @@
 
 
   <!-- Optional injected config (created by CI from GitHub Actions secret) -->
-  <script src="config.js"></script>
+  <script src="config.js" onerror="console.error('config.js failed to load — check that the file exists and is served with Content-Type application/javascript (X-Content-Type-Options: nosniff may block if served as text/html)');"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="js/filter.js"></script>
   <script type="module" src="js/script.js"></script>
