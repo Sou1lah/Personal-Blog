@@ -1,4 +1,5 @@
 ---
+banner: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/El_Aquelarre.jpg/1280px-El_Aquelarre.jpg"
 title: "Black Paintings - Wikipedia"
 source: "https://en.wikipedia.org/wiki/Black_Paintings"
 author:
@@ -8,7 +9,6 @@ created: 2026-01-17
 description:
 tags: #Art #wiki
 date: Last Ediedt : 2026-01-17
-banner: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/El_Aquelarre.jpg/1280px-El_Aquelarre.jpg"
 color: white
 ---
 

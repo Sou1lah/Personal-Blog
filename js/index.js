@@ -486,6 +486,25 @@
                     console.warn('GitHub API raw endpoint returned', arf.status, 'for', rawUrl);
                   }
                 } catch (e) { console.warn('GitHub API raw fallback failed for', rawUrl, e); }
+
+                // If the raw host returned HTML (e.g., server rendered the markdown) or the download_url was a local path,
+                // try the direct GitHub raw CDN URL as a fallback so we can parse frontmatter reliably.
+                try {
+                  // Compute a relative path suitable for raw.githubusercontent (handles variant inputs like '/wiki/..', 'wiki/...', or full origin URLs)
+                  let rel = rawUrl.replace(/^https?:\/\/[^\/]+\//i, '').replace(/^\/?wiki\//i, '');
+                  rel = rel.replace(/^\/+/, '');
+                  if (rel) {
+                    const encodedRel = rel.split('/').map(encodeURIComponent).join('/');
+                    const rawCdn = `${GITHUB_RAW}/${encodedRel}`;
+                    const rawResp = await fetch(rawCdn);
+                    if (rawResp.ok) {
+                      console.info('GitHub raw CDN fallback succeeded for', rawCdn);
+                      r = rawResp;
+                    } else {
+                      console.warn('GitHub raw CDN fallback returned', rawResp.status, 'for', rawCdn);
+                    }
+                  }
+                } catch (e) { console.warn('GitHub raw CDN fallback failed for', rawUrl, e); }
               }
             }
             if (!r.ok) throw new Error('Failed to fetch markdown: ' + rawUrl);
@@ -554,12 +573,30 @@
 
             if (bannerUrl) {
               const resolvedBanner = resolveBanner(bannerUrl, rawUrl);
+              console.info('Resolved banner for', rawUrl, '→', resolvedBanner);
               if (resolvedBanner) {
-                bannerElement.style.backgroundImage = `url(\"${resolvedBanner}\")`;
-                bannerElement.style.backgroundColor = 'transparent';
-                bannerElement.style.backgroundSize = 'cover';
-                bannerElement.style.backgroundPosition = 'center';
-                bannerElement.style.backgroundRepeat = 'no-repeat';
+                // Use an <img> element inside the banner so it displays reliably on the homepage
+                try {
+                  bannerElement.innerHTML = '';
+                  const bimg = document.createElement('img');
+                  bimg.src = resolvedBanner;
+                  bimg.alt = '';
+                  bimg.style.width = '100%';
+                  bimg.style.height = '100%';
+                  bimg.style.objectFit = 'cover';
+                  bimg.style.display = 'block';
+                  bimg.addEventListener('load', () => {
+                    bannerElement.style.backgroundColor = 'transparent';
+                    bannerElement.classList.add('banner-loaded');
+                  });
+                  bimg.addEventListener('error', () => {
+                    console.warn('Banner image failed to load for', resolvedBanner);
+                    // keep placeholder background; do not throw
+                  });
+                  bannerElement.appendChild(bimg);
+                } catch (e) {
+                  console.warn('Failed to append banner image element for', resolvedBanner, e);
+                }
               }
             } else {
               // Try to fetch banner again with fallback rawUrl
@@ -578,12 +615,21 @@
                         if (mdImg) rawBanner = mdImg[1].trim();
                         const resolvedFallback = resolveBanner(rawBanner, fallbackRawUrl);
                         if (resolvedFallback) {
-                          bannerElement.style.backgroundImage = `url("${resolvedFallback}")`;
-                          bannerElement.style.backgroundColor = 'transparent';
-                          bannerElement.style.backgroundSize = 'cover';
-                          bannerElement.style.backgroundPosition = 'center';
-                          bannerElement.style.backgroundRepeat = 'no-repeat';
-                          continue;
+                          // Insert an <img> so banner displays reliably
+                          try {
+                            bannerElement.innerHTML = '';
+                            const fb = document.createElement('img');
+                            fb.src = resolvedFallback;
+                            fb.alt = '';
+                            fb.style.width = '100%';
+                            fb.style.height = '100%';
+                            fb.style.objectFit = 'cover';
+                            fb.style.display = 'block';
+                            fb.addEventListener('load', () => { bannerElement.style.backgroundColor = 'transparent'; bannerElement.classList.add('banner-loaded'); });
+                            fb.addEventListener('error', () => { console.warn('Fallback banner image failed to load for', resolvedFallback); });
+                            bannerElement.appendChild(fb);
+                            continue;
+                          } catch (e) { console.warn('Failed to append fallback banner image for', resolvedFallback, e); }
                         }
                       }
                     }
