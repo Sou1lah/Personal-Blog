@@ -918,6 +918,8 @@ body[data-theme] .card-image {
   z-index: 100000; /* ensure visible above most elements */
   pointer-events: none; /* don't block clicks */
   opacity: 0.98;
+  /* subtle glow/outline to remain visible on busy backgrounds */
+  box-shadow: 0 0 8px rgba(0,0,0,0.06), 0 0 0 1px rgba(255,255,255,0.02) inset;
 }
 
 

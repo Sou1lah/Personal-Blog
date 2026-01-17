@@ -460,6 +460,28 @@
           });
         }
 
+        // Position vertical gutters to align with centered .container (used on desktop)
+        function positionVerticalGutters() {
+          try {
+            const left = document.querySelector('.vertical-line.left');
+            const right = document.querySelector('.vertical-line.right');
+            const container = document.querySelector('.container');
+            if (!left || !right || !container) return;
+            const rect = container.getBoundingClientRect();
+            // Hide gutters on narrow viewports to avoid clutter
+            if (rect.width < 520 || window.innerWidth < 700) { left.style.display = 'none'; right.style.display = 'none'; return; }
+            left.style.display = 'block'; right.style.display = 'block';
+            left.style.left = `${Math.max(0, Math.round(rect.left))}px`;
+            const rightOffset = Math.max(0, Math.round(window.innerWidth - rect.right));
+            right.style.right = `${rightOffset}px`;
+            left.style.removeProperty('right'); right.style.removeProperty('left');
+          } catch (e) { /* ignore */ }
+        }
+        // Make gutters follow layout changes
+        positionVerticalGutters();
+        window.addEventListener('resize', positionVerticalGutters);
+        window.addEventListener('scroll', positionVerticalGutters);
+
         const bannerElements = notesCardsContainer.querySelectorAll('.note-banner');
 
         // For card thumbnails we only need to set banners; skip content previews
@@ -589,9 +611,19 @@
                     bannerElement.style.backgroundColor = 'transparent';
                     bannerElement.classList.add('banner-loaded');
                   });
-                  bimg.addEventListener('error', () => {
+                  bimg.addEventListener('error', async () => {
                     console.warn('Banner image failed to load for', resolvedBanner);
-                    // keep placeholder background; do not throw
+                    try {
+                      // Try public image proxy (removes protocol for images.weserv.nl)
+                      const proxyUrl = `https://images.weserv.nl/?url=${encodeURIComponent(resolvedBanner.replace(/^https?:\/\//i,''))}`;
+                      console.info('Attempting proxy fallback for banner:', proxyUrl);
+                      bimg.onerror = null; // avoid loops
+                      bimg.src = proxyUrl;
+                    } catch (e) {
+                      console.warn('Proxy fallback failed for banner', resolvedBanner, e);
+                      // show placeholder background so layout remains intact
+                      bannerElement.style.backgroundImage = 'url("https://raw.githubusercontent.com/Sou1lah/Personal-Blog/main/assets/ImagePlaceholder.jpg")';
+                    }
                   });
                   bannerElement.appendChild(bimg);
                 } catch (e) {
@@ -626,7 +658,18 @@
                             fb.style.objectFit = 'cover';
                             fb.style.display = 'block';
                             fb.addEventListener('load', () => { bannerElement.style.backgroundColor = 'transparent'; bannerElement.classList.add('banner-loaded'); });
-                            fb.addEventListener('error', () => { console.warn('Fallback banner image failed to load for', resolvedFallback); });
+                            fb.addEventListener('error', (e) => {
+                              console.warn('Fallback banner image failed to load for', resolvedFallback, e);
+                              try {
+                                const proxy = `https://images.weserv.nl/?url=${encodeURIComponent(resolvedFallback.replace(/^https?:\/\//i,''))}`;
+                                console.info('Attempting proxy fallback for fallback banner:', proxy);
+                                fb.onerror = null;
+                                fb.src = proxy;
+                              } catch (err) {
+                                console.warn('Proxy fallback failed for fallback banner', resolvedFallback, err);
+                                bannerElement.style.backgroundImage = 'url("https://raw.githubusercontent.com/Sou1lah/Personal-Blog/main/assets/ImagePlaceholder.jpg")';
+                              }
+                            });
                             bannerElement.appendChild(fb);
                             continue;
                           } catch (e) { console.warn('Failed to append fallback banner image for', resolvedFallback, e); }

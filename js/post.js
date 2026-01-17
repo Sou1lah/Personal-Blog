@@ -690,12 +690,17 @@
             if (rect.width < 520 || window.innerWidth < 700) {
               left.style.display = 'none'; right.style.display = 'none'; return;
             }
-            // Position gutters at container edges (left = container.left, right = container.right - gutter width)
+            // Position gutters at container edges (left = container.left, right = distance from viewport right edge)
             const gutterWidth = 3;
             left.style.display = 'block';
             right.style.display = 'block';
             left.style.left = `${Math.max(0, Math.round(rect.left))}px`;
-            right.style.left = `${Math.max(0, Math.round(rect.right - gutterWidth))}px`;
+            // Use right property for right gutter so it aligns regardless of viewport directionality
+            const rightOffset = Math.max(0, Math.round(window.innerWidth - rect.right));
+            right.style.right = `${rightOffset}px`;
+            // Ensure we clear any conflicting inline left/right values
+            left.style.removeProperty('right');
+            right.style.removeProperty('left');
           } catch (e) { /* be robust */ }
         }
         // Run once and on resize/scroll so gutters follow responsive layout
