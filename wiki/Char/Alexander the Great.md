@@ -2,6 +2,7 @@
 banner: https://media.hswstatic.com/eyJidWNrZXQiOiJjb250ZW50Lmhzd3N0YXRpYy5jb20iLCJrZXkiOiJnaWZcL2FsZXhhbmRlci1ncmVhdC0xLmpwZyIsImVkaXRzIjp7InJlc2l6ZSI6eyJ3aWR0aCI6ODI4fX19
 color : white
 text: black
+tags : #History #characters
 ---
 # **Alexander the Great**
 
