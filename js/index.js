@@ -1,3 +1,149 @@
+    // --- Todo List Modal Logic ---
+    document.addEventListener('DOMContentLoaded', function() {
+      const openTodoBtn = document.getElementById('openTodoBtn');
+      const todoModal = document.getElementById('todoModal');
+      const closeTodoBtn = document.getElementById('closeTodoBtn');
+      const todoInput = document.getElementById('todoInput');
+      const addTodoBtn = document.getElementById('addTodoBtn');
+      const todoList = document.getElementById('todoList');
+      const todoInputRow = document.getElementById('todoInputRow');
+      if (!openTodoBtn || !todoModal || !closeTodoBtn || !todoInput || !addTodoBtn || !todoList || !todoInputRow) return;
+
+      function getTodos() {
+        try {
+          return JSON.parse(localStorage.getItem('blogTodos') || '[]');
+        } catch { return []; }
+      }
+      function saveTodos(todos) {
+        localStorage.setItem('blogTodos', JSON.stringify(todos));
+      }
+      function renderTodos() {
+        const todos = getTodos();
+        todoList.innerHTML = '';
+        todos.forEach((todo, idx) => {
+          const li = document.createElement('li');
+          li.className = 'todo-item' + (todo.done ? ' checked' : '');
+          // Checkbox
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.className = 'todo-checkbox';
+          cb.checked = !!todo.done;
+          cb.addEventListener('change', () => {
+            todos[idx].done = cb.checked;
+            saveTodos(todos);
+            renderTodos();
+          });
+          // Label
+          const label = document.createElement('span');
+          label.className = 'todo-label';
+          label.textContent = todo.text;
+          // Delete button
+          const delBtn = document.createElement('button');
+          delBtn.className = 'todo-delete-btn';
+          delBtn.textContent = '✕';
+          delBtn.title = 'Delete';
+          delBtn.addEventListener('click', () => {
+            todos.splice(idx, 1);
+            saveTodos(todos);
+            renderTodos();
+          });
+          li.appendChild(cb);
+          li.appendChild(label);
+          li.appendChild(delBtn);
+
+          // Swipe-to-delete logic
+          let startX = null;
+          let swiped = false;
+          li.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+              startX = e.touches[0].clientX;
+              swiped = false;
+            }
+          });
+          li.addEventListener('touchmove', (e) => {
+            if (startX !== null && e.touches.length === 1) {
+              const dx = e.touches[0].clientX - startX;
+              if (dx < -50) { // swipe left
+                li.classList.add('swipe-delete');
+                swiped = true;
+              } else {
+                li.classList.remove('swipe-delete');
+                swiped = false;
+              }
+            }
+          });
+          li.addEventListener('touchend', (e) => {
+            if (swiped) {
+              todos.splice(idx, 1);
+              saveTodos(todos);
+              renderTodos();
+            }
+            startX = null;
+            swiped = false;
+            li.classList.remove('swipe-delete');
+          });
+          todoList.appendChild(li);
+        });
+      }
+      let inputVisible = false;
+      addTodoBtn.addEventListener('click', () => {
+        if (!inputVisible) {
+          // Show input, move both right
+          todoInput.style.maxWidth = '320px';
+          todoInput.style.opacity = '1';
+          todoInput.style.pointerEvents = 'auto';
+          todoInputRow.style.justifyContent = 'flex-end';
+          addTodoBtn.style.marginLeft = '8px';
+          inputVisible = true;
+          setTimeout(() => { todoInput.focus(); }, 350);
+        } else {
+          const val = todoInput.value.trim();
+          if (!val) return;
+          const todos = getTodos();
+          todos.push({ text: val, done: false });
+          saveTodos(todos);
+          todoInput.value = '';
+          // Hide input, move both back
+          todoInput.style.maxWidth = '0';
+          todoInput.style.opacity = '0';
+          todoInput.style.pointerEvents = 'none';
+          addTodoBtn.style.marginLeft = '0';
+          inputVisible = false;
+          todoInputRow.style.justifyContent = 'flex-end';
+          renderTodos();
+        }
+      });
+      todoInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') addTodoBtn.click();
+      });
+      // Hide input if modal closes
+      closeTodoBtn.addEventListener('click', () => {
+        todoInput.style.maxWidth = '0';
+        todoInput.style.opacity = '0';
+        todoInput.style.pointerEvents = 'none';
+        addTodoBtn.style.marginLeft = '0';
+        inputVisible = false;
+        todoInputRow.style.justifyContent = 'flex-end';
+      });
+      openTodoBtn.addEventListener('click', () => {
+        todoModal.style.display = 'flex';
+        renderTodos();
+        setTimeout(() => { todoInput.focus(); }, 100);
+      });
+      closeTodoBtn.addEventListener('click', () => {
+        todoModal.style.display = 'none';
+      });
+      // Close modal on outside click
+      todoModal.addEventListener('click', (e) => {
+        if (e.target === todoModal) todoModal.style.display = 'none';
+      });
+      // Close modal on Escape key
+      document.addEventListener('keydown', (e) => {
+        if (todoModal.style.display === 'flex' && e.key === 'Escape') {
+          todoModal.style.display = 'none';
+        }
+      });
+    });
     const GITHUB_API = 'https://api.github.com/repos/Sou1lah/Personal-Blog/contents/wiki';
     const GITHUB_RAW = 'https://raw.githubusercontent.com/Sou1lah/Personal-Blog/main/wiki';
 

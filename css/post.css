@@ -12,6 +12,22 @@
         font-size: 0.93rem !important;
       }
     }
+    /* Make card date more visible on mobile */
+    @media (max-width: 600px) {
+      .note-date-top {
+        font-size: 1.08rem !important;
+        top: 10px !important;
+        right: 10px !important;
+        left: auto !important;
+        background: rgba(255,255,255,0.92) !important;
+        color: #222 !important;
+        padding: 3px 12px 3px 12px !important;
+        border-radius: 8px !important;
+        z-index: 3 !important;
+        box-shadow: 0 2px 8px #0001 !important;
+        display: block !important;
+      }
+    }
     html, body {
       max-width: 100vw;
       overflow-x: hidden;

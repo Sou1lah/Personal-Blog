@@ -1,3 +1,78 @@
+  <style>
+    /* Todo Modal Styles */
+    #todoModal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.32);
+      z-index: 9999;
+      align-items: center; justify-content: center;
+    }
+    #todoModal .todo-modal-content {
+      background: #fff;
+      min-width: 320px; max-width: 90vw;
+      padding: 24px 18px 18px 18px;
+      border-radius: 14px;
+      box-shadow: 0 8px 32px #0003;
+      border: 2.5px solid #222;
+      position: relative;
+      display: flex; flex-direction: column; align-items: stretch;
+      animation: todoModalIn 0.18s cubic-bezier(.4,1.6,.6,1) 1;
+    }
+    @keyframes todoModalIn { from { transform: scale(0.97) translateY(30px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+    #todoModal h3 { font-family: 'Playfair Display',serif; font-size: 1.25rem; margin: 0 0 12px 0; }
+    #todoModal input[type="text"] { flex: 1; padding: 6px 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem; }
+    #todoModal #addTodoBtn { padding: 6px 14px; border-radius: 6px; background: var(--brown); color: var(--cream); border: none; font-weight: 600; cursor: pointer; }
+    #todoModal ul#todoList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+    #todoModal li.todo-item {
+      display: flex; align-items: center; gap: 10px;
+      background: #f8f7f5;
+      border-radius: 7px;
+      padding: 7px 10px 7px 7px;
+      font-size: 1.04rem;
+      box-shadow: 0 1px 4px #0001;
+      position: relative;
+      user-select: none;
+      transition: background 0.18s;
+      touch-action: pan-y;
+    }
+    #todoModal li.todo-item.checked { background: #e4dcc9; text-decoration: line-through; color: #888; }
+    #todoModal li.todo-item .todo-checkbox {
+      appearance: none;
+      width: 20px; height: 20px;
+      border: 2px solid var(--brown);
+      border-radius: 5px;
+      background: #fff;
+      display: inline-block;
+      position: relative;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      margin-right: 2px;
+    }
+    #todoModal li.todo-item .todo-checkbox:checked {
+      border-color: var(--brown);
+      background: var(--brown);
+    }
+    #todoModal li.todo-item .todo-checkbox:checked:after {
+      content: '\2716'; /* Unicode heavy X */
+      position: absolute;
+      left: 0; top: 0;
+      width: 15px; height: 15px;
+      color: var(--cream);
+      font-size: 1.1em;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    #todoModal li.todo-item .todo-label { flex: 1; }
+    #todoModal li.todo-item .todo-delete-btn {
+      background: none; border: none; color: #b00; font-weight: bold; cursor: pointer; font-size: 1.1em; padding: 0 6px; }
+    #todoModal li.todo-item.swipe-delete { background: #ffeaea !important; }
+    #todoModal #closeTodoBtn { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.5rem; color: #b00; cursor: pointer; }
+    @media (max-width: 500px) { #todoModal .todo-modal-content { min-width: 0; width: 98vw; } }
+  </style>
 <!doctype html>
 <html lang="en">
 <head>
@@ -22,6 +97,27 @@
             <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82A7.6 7.6 0 018 4.6c.68.003 1.36.092 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
           </svg>
         </a>
+        <button id="openTodoBtn" title="Show Todo List" aria-label="Show Todo List" style="background:none;border:none;cursor:pointer;margin-left:10px;display:flex;align-items:center;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke="#24221b" fill="#fff"/>
+            <path d="M9 9h6" stroke="#24221b"/>
+            <path d="M9 13h6" stroke="#24221b"/>
+            <path d="M9 17h2" stroke="#24221b"/>
+          </svg>
+        </button>
+
+        <div id="todoModal">
+          <div class="todo-modal-content">
+            <button id="closeTodoBtn" title="Close" aria-label="Close">&times;</button>
+            <h3 style="margin-bottom:0.5em;">Todo List</h3>
+            <hr style="border:0;border-top:2px solid #222;margin:0 0 16px 0;opacity:0.7;width:calc(100% + 36px);margin-left:-18px;margin-right:-18px;">
+            <ul id="todoList"></ul>
+            <div id="todoInputRow" style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end;transition:all 0.32s cubic-bezier(.4,1.6,.6,1);min-height:44px;">
+              <input id="todoInput" type="text" placeholder="Add topic..." style="flex:1;max-width:0;opacity:0;pointer-events:none;transition:max-width 0.32s cubic-bezier(.4,1.6,.6,1),opacity 0.22s;margin-right:-8px;" autocomplete="off">
+              <button id="addTodoBtn" style="padding:12px 0;border-radius:8px;background:var(--brown);color:var(--cream);border:none;font-weight:700;cursor:pointer;font-size:1.13rem;width:120px;box-shadow:0 2px 8px #0001;transition:margin 0.32s cubic-bezier(.4,1.6,.6,1);">Add</button>
+            </div>
+          </div>
+        </div>
       </div> 
     </header> 
 
