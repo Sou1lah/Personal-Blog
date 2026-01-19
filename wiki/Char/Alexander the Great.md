@@ -3,12 +3,13 @@ banner: https://media.hswstatic.com/eyJidWNrZXQiOiJjb250ZW50Lmhzd3N0YXRpYy5jb20i
 color : white
 text: black
 tags : #History #characters
+date: 2024-01-19
 ---
 # **Alexander the Great**
 
 <div style="display: flex; align-items: flex-start; gap: 16px;">
     <div style="flex: 1;">
-        <strong>Alexander III of Macedon</strong> (356 BC – 323 BC), commonly known as <strong>Alexander the Great</strong>, was a king of Macedonia, military commander, and one of history’s most successful conquerors. By the age of 30, he created one of the largest empires of the ancient world, stretching from Greece to Egypt and into northwest India.
+        <Alexander III of Macedon</strong> (356 BC – 323 BC), commonly known as <strong>Alexander the Great</strong>, was a king of Macedonia, military commander, and one of history’s most successful conquerors. By the age of 30, he created one of the largest empires of the ancient world, stretching from Greece to Egypt and into northwest India.
     </div>
     <img src="https://hips.hearstapps.com/hmg-prod/images/gettyimages-463906803sq.jpg?crop=1xw:1.0xh;center,top&resize=640:*" alt="Alexander the Great" style="max-width: 120px; border-radius: 8px; margin-left: 8px;">
 </div>

@@ -1,3 +1,19 @@
+    /* Title placeholder loader */
+    .title-loader {
+      display: inline-block;
+      width: 180px;
+      height: 2.2rem;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #ececec 25%, #f5f5f5 50%, #ececec 75%);
+      background-size: 200% 100%;
+      animation: titleLoaderShimmer 1.2s infinite linear;
+      vertical-align: middle;
+    }
+
+    @keyframes titleLoaderShimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
     .post-page {
       max-width: 950px;
       overflow: hidden;
@@ -58,13 +74,13 @@
     @media (max-width:600px) {
       /* Negative margin to overlap header into the banner on small screens with moderate depth */
       .post-header {
-        margin-top: -48px;
-        border-radius: 20px; /* more rounded corners on mobile */
+        margin-top: 0;
+        border-radius: 0;
         padding: 12px 18px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-        background: rgba(255,255,255,0.88);
-        -webkit-backdrop-filter: blur(4px);
-        backdrop-filter: blur(4px);
+        box-shadow: none;
+        background: none;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
       }
       /* Keep banner slightly shorter on mobile and allow overlap */
       .post-banner {
@@ -103,21 +119,15 @@
 
     .post-header {
       margin-bottom: 0; /* remove space after header so content starts at the border */
-      padding: 18px 40px 16px 40px; /* slightly more padding for airy header */
-      border: 1px solid rgba(0,0,0,0.12); /* visible rounded border */
-      border-radius: 12px; /* fully rounded corners */
-      box-shadow: 0 14px 36px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.6);
-      background: rgba(255,255,255,0.86); /* more transparent so the banner peeks through */
+      padding: 18px 40px 16px 40px; /* keep padding for layout */
       position: relative;
       z-index: 5; /* above banner */
-      margin-top: -72px; /* pull header further into banner so image is visible inside header */
-      overflow: hidden; /* enforce rounded corners and clip child content */
-      -webkit-backdrop-filter: blur(6px);
-      backdrop-filter: blur(6px);
-      -webkit-background-clip: padding-box;
-      background-clip: padding-box;
+      margin-top: 0; /* no overlap with banner */
+      /* removed background, border, border-radius, box-shadow, blur, and background-clip for a flat look */
     }
-
+    /* Remove decorative horizontal bar under header */
+    .post-header::after { display: none !important; }
+    
     .post-meta {
       font-weight: 400;
     }
@@ -402,7 +412,7 @@
     @media (max-width:420px) {
       .post-page { max-width: 100%; margin: 0; padding: 0; box-sizing: border-box; border-left: none; border-right: none; border-bottom: none; }
       /* Keep rounded header on very small screens and a modest overlap */
-      .post-header { padding: 12px; border-bottom: none; margin-top: -36px; border-radius: 20px; box-shadow: 0 6px 18px rgba(0,0,0,0.05); background: rgba(255,255,255,0.9); }
+      .post-header { padding: 12px; border-bottom: none; margin-top: 0; border-radius: 0; box-shadow: none; background: none; }
 
       /* Smaller images rounding on very small screens */
       .post-body img,

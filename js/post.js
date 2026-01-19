@@ -1,3 +1,14 @@
+                // Hide loader and show title when post title is loaded
+                function showPostTitle(title) {
+                  const loader = document.getElementById('postTitleLoader');
+                  const text = document.getElementById('postTitleText');
+                  if (loader && text) {
+                    loader.style.display = 'none';
+                    text.textContent = title;
+                    text.style.display = '';
+                  }
+                }
+                // Example usage: showPostTitle('Loaded Title');
                 // Image zoom logic
                 const imgZoomOverlay = document.getElementById('imgZoomOverlay');
                 function enableImageZoom() {
