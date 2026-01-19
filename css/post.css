@@ -1,3 +1,21 @@
+    #postDate {
+      font-family: 'Playfair Display', Georgia, 'Times New Roman', serif !important;
+      font-size: 1.13rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      color: var(--theme-text, #222);
+      opacity: 0.92;
+    }
+    /* Horizontal line under the header title, connects to left/right border */
+    .header-divider {
+      width: calc(100% + 80px);
+      margin-left: -40px;
+      height: 0;
+      border-top: 2px solid currentColor;
+      margin-top: 16px;
+      margin-bottom: 12px;
+      opacity: 0.7;
+    }
     /* Title placeholder loader */
     .title-loader {
       display: inline-block;
@@ -64,9 +82,9 @@
       height: 320px;
     }
 
-    /* When a theme is active keep the header semi-transparent while remaining readable */
-    .note-theme .post-header {
-      background: rgba(var(--theme-rgb), 0.08) !important;
+        .post-container {
+          max-width: 950px;
+          margin: 40px auto 40px auto;
       color: var(--theme-text) !important;
     }
 
@@ -74,7 +92,7 @@
     @media (max-width:600px) {
       /* Negative margin to overlap header into the banner on small screens with moderate depth */
       .post-header {
-        margin-top: 0;
+          border: 3px solid currentColor;
         border-radius: 0;
         padding: 12px 18px;
         box-shadow: none;
@@ -123,7 +141,9 @@
       position: relative;
       z-index: 5; /* above banner */
       margin-top: 0; /* no overlap with banner */
-      /* removed background, border, border-radius, box-shadow, blur, and background-clip for a flat look */
+      background-color: transparent !important;
+      background-image: none !important;
+      /* removed border, border-radius, box-shadow, blur, and background-clip for a flat look */
     }
     /* Remove decorative horizontal bar under header */
     .post-header::after { display: none !important; }
@@ -195,7 +215,7 @@
       color: var(--cream);
       text-decoration: none;
       border-radius: 50px;
-      border: 3px solid var(--brown);
+      border: none;
       font-weight: 700;
       font-size: 14px;
       transition: all 0.2s ease;
@@ -223,7 +243,7 @@
       background: #000;
       color: #fff;
       border-radius: 50%;
-      border: 3px solid #000;
+      border: none;
       font-weight: 900;
       font-size: 22px; /* bigger arrow */
       line-height: 1;
@@ -276,7 +296,7 @@
       background: #000;
       color: #fff;
       border-radius: 50%;
-      border: 3px solid #000;
+      border: none;
       font-weight: 900;
       font-size: 22px; /* bigger arrow */
       display: inline-flex;
@@ -410,7 +430,7 @@
 
     /* On very small screens make the post page edge-to-edge */
     @media (max-width:420px) {
-      .post-page { max-width: 100%; margin: 0; padding: 0; box-sizing: border-box; border-left: none; border-right: none; border-bottom: none; }
+      .post-page { max-width: 100%; margin: 0; padding: 0; box-sizing: border-box; }
       /* Keep rounded header on very small screens and a modest overlap */
       .post-header { padding: 12px; border-bottom: none; margin-top: 0; border-radius: 0; box-shadow: none; background: none; }
 
@@ -428,7 +448,15 @@
   top: 0;
   bottom: 0;
   width: 3px;
-  background: var(--gutter-line);
+  background: currentColor;
+  /* Ensure <hr> elements are visible and use the text color */
+  .post-page hr {
+    border: none;
+    border-top: 2px solid currentColor;
+    height: 0;
+    margin: 24px 0;
+    opacity: 0.5;
+  }
   z-index: 9999; /* keep visible above most elements */
   pointer-events: none; /* don't block clicks */
 }
@@ -464,3 +492,17 @@
   margin-bottom: 20px;
   width: 100%;
 }
+
+  .post-container {
+    max-width: 950px;
+    margin: 40px auto 40px auto;
+    background: inherit;
+    border: 3px solid currentColor !important;
+    border-radius: 16px;
+    overflow: hidden;
+    box-sizing: border-box;
+    position: relative;
+    min-height: 100vh;
+    color: var(--theme-text, #222) !important;
+    z-index: 1;
+  }
