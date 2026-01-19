@@ -1,5 +1,5 @@
 ---
-banner: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQaKf_dp_LBUuWujZF4V7U3nO-D_tqUph-3jQ&s
+banner: https://media.hswstatic.com/eyJidWNrZXQiOiJjb250ZW50Lmhzd3N0YXRpYy5jb20iLCJrZXkiOiJnaWZcL2FsZXhhbmRlci1ncmVhdC0xLmpwZyIsImVkaXRzIjp7InJlc2l6ZSI6eyJ3aWR0aCI6ODI4fX19
 color : white
 text: black
 ---
