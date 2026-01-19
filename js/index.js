@@ -223,6 +223,28 @@
         let html = '';
         const noteMappings = []; // { slug, download_url, id, title, category }
         function slugify(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+        // Import parseFrontMatter from post.js
+        // (If using modules, use import. For now, copy the function inline for browser compatibility)
+        function parseFrontMatter(md) {
+          const match = md.match(/^---\s*\n([\s\S]*?)\n---\s*\n?/);
+          if (!match) return { data: {}, content: md };
+          const yaml = match[1];
+          const content = md.slice(match[0].length);
+          const data = {};
+          yaml.split(/\r?\n/).forEach(line => {
+            if (!line.trim()) return;
+            const idx = line.indexOf(':');
+            if (idx === -1) return;
+            const key = line.slice(0, idx).trim();
+            let value = line.slice(idx + 1).trim();
+            if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+              value = value.slice(1, -1);
+            }
+            data[key] = value;
+          });
+          return { data, content };
+        }
+
         for (const [category, items] of Object.entries(categories)) {
           if (items.length === 0) continue;
 
@@ -258,9 +280,30 @@
 
             // Synchronously add a placeholder for tags, to be filled after fetch
             const cardId = `card-${category.replace(/[^a-zA-Z0-9]/g, '')}-${file.name.replace(/[^a-zA-Z0-9]/g, '')}`;
+
+            // Fetch the markdown file synchronously (blocking, but only for card metadata)
+            let noteDate = '';
+            try {
+              const xhr = new XMLHttpRequest();
+              xhr.open('GET', rawUrl, false); // synchronous
+              xhr.send(null);
+              if (xhr.status === 200) {
+                const md = xhr.responseText;
+                const { data } = parseFrontMatter(md);
+                noteDate = data.date || data.published || data.created || '';
+              }
+            } catch (e) {
+              console.warn('Failed to fetch or parse frontmatter for', rawUrl, e);
+            }
+            if (!noteDate && file.date) {
+              noteDate = file.date;
+            }
+
             html += `
               <article class="card" id="${cardId}" ${slug ? `data-slug="${slug}"` : `data-note="${encodeURIComponent(path)}"`} style="display: flex; flex-direction: column; min-height: 260px; position: relative; padding-bottom: 72px;">
-                <div class="note-banner" data-raw-url="${rawUrl}" style="width: 100%; height: 140px; background-color: #d4c5b9; background-size: cover; background-position: center; background-repeat: no-repeat; border-radius: 16px 16px 0 0;"></div>
+                <div class="note-banner" data-raw-url="${rawUrl}" style="width: 100%; height: 140px; background-color: #d4c5b9; background-size: cover; background-position: center; background-repeat: no-repeat; border-radius: 16px 16px 0 0; position: relative;">
+                  ${noteDate ? `<div class='note-date-top' style="position:absolute;top:8px;right:16px;font-size:0.98rem;font-family:'Playfair Display',Georgia,serif;font-weight:600;opacity:0.85;background:rgba(255,255,255,0.7);padding:2px 10px 2px 10px;border-radius:8px;z-index:2;">${noteDate}</div>` : ''}
+                </div>
                 <h3 class="card-title" style="margin-top: 12px;">${title}</h3>
                 <div style="flex: 1;"></div>
                 <div class="card-footer" style="position: absolute; left: 16px; right: 12px; bottom: 12px; z-index: 2; pointer-events: auto; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
@@ -599,6 +642,34 @@
               if (resolvedBanner) {
                 // Use an <img> element inside the banner so it displays reliably on the homepage
                 try {
+                  // Save the date element if present
+                  let dateDiv = bannerElement.querySelector('.note-date-top');
+                  if (!dateDiv) {
+                    // Try to get the date from the card's dataset (fallback)
+                    const card = bannerElement.closest('.card');
+                    let noteDate = '';
+                    if (card) {
+                      // Try to find the date in the card's HTML (fragile fallback)
+                      const dateMatch = card.innerHTML.match(/<div class='note-date-top'[^>]*>(.*?)<\/div>/);
+                      if (dateMatch) noteDate = dateMatch[1];
+                    }
+                    if (noteDate) {
+                      dateDiv = document.createElement('div');
+                      dateDiv.className = 'note-date-top';
+                      dateDiv.style.position = 'absolute';
+                      dateDiv.style.top = '8px';
+                      dateDiv.style.right = '16px';
+                      dateDiv.style.fontSize = '0.98rem';
+                      dateDiv.style.fontFamily = "'Playfair Display',Georgia,serif";
+                      dateDiv.style.fontWeight = '600';
+                      dateDiv.style.opacity = '0.85';
+                      dateDiv.style.background = 'rgba(255,255,255,0.7)';
+                      dateDiv.style.padding = '2px 10px 2px 10px';
+                      dateDiv.style.borderRadius = '8px';
+                      dateDiv.style.zIndex = '2';
+                      dateDiv.textContent = noteDate;
+                    }
+                  }
                   bannerElement.innerHTML = '';
                   const bimg = document.createElement('img');
                   bimg.src = resolvedBanner;
@@ -626,6 +697,7 @@
                     }
                   });
                   bannerElement.appendChild(bimg);
+                  if (dateDiv) bannerElement.appendChild(dateDiv);
                 } catch (e) {
                   console.warn('Failed to append banner image element for', resolvedBanner, e);
                 }

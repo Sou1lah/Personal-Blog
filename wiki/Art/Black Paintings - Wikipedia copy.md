@@ -8,7 +8,7 @@ published: 2005-06-07
 created: 2026-01-17
 description:
 tags: #Art #wiki
-date: Last Ediedt : 2026-01-17
+date: 2026-01-17
 color: black
 text: white
 source : https://www.youtube.com/watch?v=UOkscKuXP4k&t=865s

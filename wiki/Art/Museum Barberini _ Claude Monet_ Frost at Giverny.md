@@ -1,8 +1,7 @@
 ---
 title: "Claude Monet — Frost at Giverny"
 source: "https://sammlung.museum-barberini.de/en/MB-Mon-18_claude-monet-frost-at-giverny"
-date: 1885
-created: 2026-01-17
+date: 2026-01-17
 description: "Frost at Giverny (1885) by Claude Monet — details and exhibition history." 
 tags: #art
 color: white
