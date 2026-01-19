@@ -385,7 +385,7 @@ body::-webkit-scrollbar {
     line-height: 1;
     margin-right: 0.6rem;
     margin-top: 4px;
-    color: var(--note-accent, var(--brown));
+    color: var(--note-accent, var(--accent));
     padding-right: 6px;
     padding-top: 2px;
     display: inline-block;
@@ -402,13 +402,23 @@ body::-webkit-scrollbar {
     line-height: 0.8;
     margin-right: 0.6rem;
     margin-top: 0;
-    color: var(--note-accent, var(--primary));
+    color: var(--note-accent, var(--accent));
     padding-right: 10px;
     padding-top: 2px;
     display: inline-block;
     initial-letter: 4 3;
     -webkit-initial-letter: 4 3;
     shape-outside: circle(50%);
+  }
+
+  /* Ensure drop-caps and source text use the per-note or site accent (higher specificity) */
+  .post-page .post-body:not(.no-upchar) > p:first-child::first-letter {
+    color: var(--note-accent, var(--accent)) !important;
+  }
+  .post-page .post-source,
+  .post-page .post-source a,
+  .post-page .post-source strong {
+    color: var(--note-accent, var(--accent)) !important;
   }
 
   /* Make drop-cap smaller on narrow viewports */
@@ -419,7 +429,8 @@ body::-webkit-scrollbar {
   }
 
   /* Per-note content accent for wiki cards (set via --note-accent on .wiki-card-content when frontmatter provides `color`) */
-  .wiki-card-content { --note-accent: var(--primary); }
+  /* Default to the site accent so cards use the external accent color unless a per-note color is set */
+  .wiki-card-content { --note-accent: var(--accent); }
   .wiki-card-content a { color: var(--note-accent); }
   .wiki-card-content h2,
   .wiki-card-content h3 { color: var(--note-accent); }
@@ -434,6 +445,7 @@ body::-webkit-scrollbar {
     line-height: 0.8;
     margin-right: 0.6rem;
     margin-top: 0;
+    color: var(--note-accent, var(--accent));
     padding-right: 10px;
     padding-top: 2px;
     display: inline-block;
@@ -442,8 +454,9 @@ body::-webkit-scrollbar {
     shape-outside: circle(50%);
   }
   /* Note-aware content accent color (set via --note-accent on the .post-body element).
-     Accepts a hex value or a theme-derived accent. Defaults to var(--primary). */
-  .post-body { --note-accent: var(--primary); }
+     Accepts a hex value or a theme-derived accent. Defaults to site accent (var(--accent)). */
+  /* Default to the global site accent so drop-caps and sources use the external accent when no per-note color is set */
+  .post-body { --note-accent: var(--accent); }
   /* Keep text colors inherited; use --note-accent for decorative borders only */
   .post-body a { color: inherit; }
   .post-body h2,
