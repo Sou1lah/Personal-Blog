@@ -1,3 +1,27 @@
+/* Consistent header button spacing */
+
+.header-btn {
+  padding: 8px 16px;
+  margin-left: 2px;
+  margin-right: 0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--brown);
+  color: var(--cream);
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+.header-btn:first-child {
+  margin-left: 0;
+}
+.header-btn:hover {
+  background: var(--cream);
+  color: var(--brown);
+}
 @keyframes reload-swing {
   0% { transform: rotate(0deg); }
   30% { transform: rotate(60deg); }
@@ -524,6 +548,19 @@ body::-webkit-scrollbar {
 	.card .btn { background: var(--note-accent, var(--brown)); color: var(--cream); border: 3px solid var(--note-accent, var(--brown)); }
 	.card .btn:hover { background: var(--cream); color: var(--note-accent, var(--brown)); border-color: var(--note-accent, var(--brown)); }
 .card-image { width: 100%; height: 140px; background: linear-gradient(135deg, #d4c5b9 0%, #a89f99 100%); display: flex; align-items: center; justify-content: center; color: rgba(36,34,27,0.5); font-size: 0.9rem; }
+
+/* Fade effect between card image and content */
+.note-banner::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 48px;
+  pointer-events: none;
+  z-index: 1;
+  background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, var(--note-bg, white) 100%);
+}
 .card-date { text-align: right; font-size: 0.75rem; color: rgba(36,34,27,0.6); letter-spacing: 0.5px; }
 .card-title { font-size: 1rem; font-weight:900; padding: 0 18px; margin-top: 6px; }
 .card-excerpt { color: rgba(36,34,27,0.8); font-size: .95rem; flex:1; padding: 0 18px; }
