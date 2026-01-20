@@ -1,12 +1,28 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="utf-8">
+  <!-- Multilingual font support: Arabic, Latin, etc. -->
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;700&family=Noto+Sans:wght@400;700&family=Noto+Sans+Arabic:wght@400;700&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Personal Blog</title>
   <!-- IBM Plex Mono for the retro look -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
+  <style>
+    body[dir="rtl"], html[dir="rtl"] {
+      direction: rtl;
+      font-family: 'Tajawal', 'Amiri', 'Noto Sans Arabic', 'Cairo', 'Noto Sans', 'Inter', 'Playfair Display', sans-serif;
+    }
+    .rtl {
+      direction: rtl;
+      text-align: right;
+      font-family: 'Tajawal', 'Amiri', 'Noto Sans Arabic', 'Cairo', 'Noto Sans', 'Inter', 'Playfair Display', sans-serif;
+    }
+    body, html {
+      font-family: 'Noto Sans', 'Inter', 'Playfair Display', 'Cairo', 'Noto Sans Arabic', 'Tajawal', 'Amiri', sans-serif;
+    }
+  </style>
 </head>
 <body>
   <div class="vertical-line left"></div>
@@ -94,6 +110,34 @@
   <script src="config.js" onerror="console.error('config.js failed to load — check that the file exists and is served with Content-Type application/javascript (X-Content-Type-Options: nosniff may block if served as text/html)');"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="js/filter.js"></script>
+  <script>
+    // Simple Arabic detection and RTL switch
+    function isArabic(text) {
+      return /[\u0600-\u06FF]/.test(text);
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if any note or content is Arabic and switch to RTL if needed
+      const notesContainer = document.getElementById('notesCardsContainer');
+      if (notesContainer) {
+        const observer = new MutationObserver(() => {
+          const cards = notesContainer.querySelectorAll('.card, .note-card');
+          cards.forEach(card => {
+            if (isArabic(card.textContent)) {
+              card.classList.add('rtl');
+            } else {
+              card.classList.remove('rtl');
+            }
+          });
+        });
+        observer.observe(notesContainer, { childList: true, subtree: true });
+      }
+      // Optionally, set the whole page to RTL if most content is Arabic
+      const bodyText = document.body.textContent;
+      if (isArabic(bodyText)) {
+        document.documentElement.setAttribute('dir', 'rtl');
+      }
+    });
+  </script>
   <script type="module" src="js/script.js"></script>
   <script src="js/index.js"></script>
 
