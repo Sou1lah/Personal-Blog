@@ -1,4 +1,4 @@
-// --- Todo List Modal Logic ---
+    // --- Todo List Modal Logic ---
     document.addEventListener('DOMContentLoaded', function() {
       const openTodoBtn = document.getElementById('openTodoBtn');
       const todoModal = document.getElementById('todoModal');
@@ -74,13 +74,11 @@
           });
           li.addEventListener('touchend', (e) => {
             if (swiped) {
-              todos.splice(idx, 1);
-              saveTodos(todos);
-              renderTodos();
+                      if (lower === 'twitter') {
+                        label = 'x.com';
+                      }
+                      return `<span style=\"display:inline-block;background:${bg};color:${icon.color};font-size:0.85em;padding:2px 10px 2px 8px;border-radius:50px;box-shadow:0 1px 4px #0001;white-space:nowrap;vertical-align:middle;gap:4px;${font}\">${svg}<span style='margin-left:6px;vertical-align:middle;'>${label}</span></span>`;
             }
-            startX = null;
-            swiped = false;
-            li.classList.remove('swipe-delete');
           });
           todoList.appendChild(li);
         });
@@ -163,44 +161,198 @@
         // If Drive is configured, always refresh from Drive so new uploads appear immediately
         if (typeof window !== 'undefined' && window.__DRIVE_FOLDER_ID) forceFetch = true;
 
-        // Always fetch all markdown files dynamically (ignore index.json)
-        let categories = {};
-        // Prefer GitHub API if preferGitHub is true, otherwise try local server
+        // Use localStorage cache unless forceFetch is true
+      let categories = {};
+      if (!forceFetch) {
+        const cached = localStorage.getItem('wikiNotesCache');
+        if (cached) {
+          try {
+            categories = JSON.parse(cached);
+          } catch (e) {
+            categories = {};
+          }
+        }
+      }
+      if (Object.keys(categories).length === 0 || forceFetch) {
+        // Helper: recursively fetch all .md files from GitHub API
+        async function fetchAllMarkdownFiles(apiUrl, category = null) {
+          const result = {};
+          const ghHeaders = { 'Accept': 'application/vnd.github.v3+json' };
+          if (typeof window !== 'undefined' && window.__GITHUB_TOKEN) ghHeaders['Authorization'] = `token ${window.__GITHUB_TOKEN}`;
+          const response = await fetch(apiUrl, { headers: ghHeaders });
+          if (!response.ok) return result;
+          const items = await response.json();
+          for (const item of items) {
+            if (item.type === 'dir') {
+              const sub = await fetchAllMarkdownFiles(`${apiUrl}/${item.name}`, item.name);
+              for (const [cat, files] of Object.entries(sub)) {
+                if (!result[cat]) result[cat] = [];
+                result[cat] = result[cat].concat(files);
+              }
+            } else if (item.name.endsWith('.md')) {
+              const cat = category || 'Root';
+              if (!result[cat]) result[cat] = [];
+              result[cat].push(item);
+            }
+          }
+          return result;
+        }
+        // Helper: recursively fetch all .md files from local server
+        async function fetchAllMarkdownFilesLocal(basePath = '/wiki/', category = null) {
+          const result = {};
+          const resp = await fetch(basePath);
+          if (!resp.ok) return result;
+          const html = await resp.text();
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          const anchors = Array.from(doc.querySelectorAll('a'));
+          for (const a of anchors) {
+            const href = a.getAttribute('href');
+            if (!href || href === '../') continue;
+            if (href.endsWith('.md')) {
+              let cleaned = decodeURIComponent(href).replace(/^\/?/, '').trim().replace(/\s+\.md$/, '.md');
+              if (cleaned.toLowerCase().startsWith('wiki/')) cleaned = cleaned.replace(/^wiki\//i, '');
+              const parts = cleaned.split('/');
+              const cat = category || (parts.length > 1 ? parts[0] : 'Root');
+              if (!result[cat]) result[cat] = [];
+              result[cat].push({ name: parts.slice(-1)[0], path: cleaned, download_url: `/wiki/${cleaned}` });
+            } else if (!href.endsWith('.md') && !href.includes('.')) {
+              // Likely a subdirectory
+              const sub = await fetchAllMarkdownFilesLocal(basePath + href, href.replace(/\/$/, ''));
+              for (const [cat, files] of Object.entries(sub)) {
+                if (!result[cat]) result[cat] = [];
+                result[cat] = result[cat].concat(files);
+              }
+            }
+          }
+          return result;
+        }
+
+        // If caller requested a forced GitHub fetch, try live listing now and skip index.json if it succeeds
         if (preferGitHub) {
           try {
             const liveForced = await fetchAllMarkdownFiles(GITHUB_API);
             if (liveForced && Object.keys(liveForced).length) {
+              console.log('Forced GitHub listing found — using live listing for wiki notes');
               categories = liveForced;
               try { localStorage.setItem('wikiNotesCache', JSON.stringify(categories)); } catch (e) {}
             } else {
-              console.warn('Forced GitHub listing returned no files — falling back to local');
+              console.warn('Forced GitHub listing returned no files — falling back to index.json/local');
             }
           } catch (forcedErr) {
             console.warn('Forced GitHub listing failed:', forcedErr);
           }
         }
-        if (!Object.keys(categories).length) {
-          // Try local server
+
+        try {
+          // Try index.json manifest first (local dev or GitHub raw)
+          let indexList = null;
           try {
-            categories = await fetchAllMarkdownFilesLocal('/wiki/');
-            if (Object.keys(categories).length) {
-              try { localStorage.setItem('wikiNotesCache', JSON.stringify(categories)); } catch (e) {}
-            }
-          } catch (localErr) {
-            console.warn('Local fetch failed:', localErr);
+            const idxResp = await fetch('/wiki/index.json');
+            if (idxResp.ok) indexList = await idxResp.json();
+          } catch (e) {}
+          if (!indexList) {
+            try {
+              const ghIdxResp = await fetch(`${GITHUB_RAW}/index.json`);
+              if (ghIdxResp.ok) indexList = await ghIdxResp.json();
+            } catch (e) {}
           }
-        }
-        if (!Object.keys(categories).length) {
-          // As a last resort, try GitHub API again
-          try {
-            categories = await fetchAllMarkdownFiles(GITHUB_API);
-            if (Object.keys(categories).length) {
-              try { localStorage.setItem('wikiNotesCache', JSON.stringify(categories)); } catch (e) {}
+
+          if (indexList && Array.isArray(indexList.files) && indexList.files.length) {
+            const built = {};
+            for (const p of indexList.files) {
+              const cleaned = decodeURIComponent(p).replace(/^\/?/, '').trim();
+              const parts = cleaned.split('/');
+              if (parts.length === 1) {
+                if (!built['Root']) built['Root'] = [];
+                built['Root'].push({ name: parts[0], path: cleaned, download_url: `/wiki/${cleaned}` });
+              } else {
+                const dir = parts[0];
+                const filename = parts.slice(1).join('/');
+                if (!built[dir]) built[dir] = [];
+                built[dir].push({ name: filename, path: cleaned, download_url: `/wiki/${cleaned}` });
+              }
             }
-          } catch (githubErr) {
-            console.warn('GitHub API fetch failed:', githubErr);
+            categories = built;
+            try { localStorage.setItem('wikiNotesCache', JSON.stringify(categories)); } catch (e) {}
+
+            // Also attempt a live GitHub API fetch to pick up files added directly to the repo
+            // (this avoids missing new files when index.json wasn't updated).
+            try {
+              const live = await fetchAllMarkdownFiles(GITHUB_API);
+              if (live && Object.keys(live).length) {
+                console.log('Live GitHub listing found — using it instead of index.json manifest');
+                categories = live;
+                try { localStorage.setItem('wikiNotesCache', JSON.stringify(categories)); } catch (e) {}
+              }
+            } catch (liveErr) {
+              // Ignore and keep using index.json-derived categories
+              console.warn('Live GitHub listing failed, using index.json manifest:', liveErr);
+            }
+          } else {
+            // No index.json: try GitHub first (default). If GitHub returns no files and Drive is configured, use Drive as fallback.
+            try {
+              categories = await fetchAllMarkdownFiles(GITHUB_API);
+            } catch (githubErr) {
+              console.warn('GitHub API fetch failed:', githubErr);
+            }
+
+            if ((!categories || Object.keys(categories).length === 0) && typeof window !== 'undefined' && window.__DRIVE_FOLDER_ID && window.__GOOGLE_DRIVE_API_KEY) {
+              try {
+                const driveFiles = await (async function fetchDriveFilesRec(folderId, apiKey, parentPath = '') {
+                  const q = encodeURIComponent(`'${folderId}'+in+parents+and+trashed=false`);
+                  const url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,mimeType,parents)&pageSize=500&key=${apiKey}`;
+                  const resp = await fetch(url);
+                  if (!resp.ok) throw new Error('Drive files list failed');
+                  const data = await resp.json();
+                  const result = {};
+                  result[parentPath || 'Root'] = result[parentPath || 'Root'] || [];
+                  for (const f of data.files || []) {
+                    const lower = (f.name || '').toLowerCase();
+                    if (f.mimeType === 'application/vnd.google-apps.folder') {
+                      // Recurse into subfolder and merge results
+                      try {
+                        const subPath = parentPath ? `${parentPath}/${f.name}` : f.name;
+                        const sub = await fetchDriveFilesRec(f.id, apiKey, subPath);
+                        for (const [k, v] of Object.entries(sub)) {
+                          if (!result[k]) result[k] = [];
+                          result[k] = result[k].concat(v);
+                        }
+                      } catch (e) {
+                        console.warn('Failed to recurse into folder', f.name, e);
+                      }
+                    } else if (lower.endsWith('.md') || lower.endsWith('.markdown') || f.mimeType === 'text/markdown' || f.mimeType === 'text/plain') {
+                      const key = parentPath || 'Root';
+                      result[key] = result[key] || [];
+                      result[key].push({ name: f.name, path: `drive/${f.id}`, download_url: `https://www.googleapis.com/drive/v3/files/${f.id}?alt=media&key=${apiKey}` });
+                    }
+                  }
+                  return result;
+                })(window.__DRIVE_FOLDER_ID, window.__GOOGLE_DRIVE_API_KEY);
+                // Merge driveFiles into categories if any
+                if (driveFiles && Object.keys(driveFiles).length) {
+                  categories = driveFiles;
+                  try { localStorage.setItem('wikiNotesCache', JSON.stringify(categories)); } catch (e) {}
+                }
+              } catch (driveErr) {
+                console.warn('Google Drive fetch failed:', driveErr);
+              }
+            }
+
+            // Final fallback to local /wiki
+            if (!Object.keys(categories).length) {
+              try {
+                categories = await fetchAllMarkdownFilesLocal();
+              } catch (localErr) {
+                console.error('Local /wiki fallback failed:', localErr);
+              }
+            }
           }
+        } catch (e) {
+          // If all fetching fails, categories remains empty and error will be handled below
         }
+      }
+
         const totalFiles = Object.values(categories).reduce((sum, arr) => sum + arr.length, 0);
         if (totalFiles === 0) {
           notesCardsContainer.innerHTML = `
@@ -273,19 +425,23 @@
 
             // Async fetch for note metadata
             let noteDate = '';
+            let created = '';
+            let published = '';
             try {
               const resp = await fetch(rawUrl);
               if (resp.ok) {
                 const md = await resp.text();
                 const { data } = parseFrontMatter(md);
-                noteDate = data.date || data.published || data.created || '';
+                noteDate = data.date || '';
+                created = data.created || '';
+                published = data.published || '';
               }
             } catch (e) {
               console.warn('Failed to fetch or parse frontmatter for', rawUrl, e);
             }
-            if (!noteDate && file.date) {
-              noteDate = file.date;
-            }
+            if (!noteDate && file.date) noteDate = file.date;
+            if (!created && file.created) created = file.created;
+            if (!published && file.published) published = file.published;
 
             return {
               cardId,
@@ -294,15 +450,21 @@
               rawUrl,
               title,
               noteDate,
+              created,
+              published,
               category
             };
           }));
 
-          // Sort cards by date (newest first)
+          // Sort cards by the most recent date (newest first)
+          function getMostRecentDate(card) {
+            const dates = [card.noteDate, card.created, card.published].filter(Boolean).map(d => new Date(d));
+            if (!dates.length) return new Date(0);
+            return new Date(Math.max.apply(null, dates.map(d => d.getTime())));
+          }
           cardDataArr.sort((a, b) => {
-            // Parse date strings to Date objects
-            const dateA = a.noteDate ? new Date(a.noteDate) : new Date(0);
-            const dateB = b.noteDate ? new Date(b.noteDate) : new Date(0);
+            const dateA = getMostRecentDate(a);
+            const dateB = getMostRecentDate(b);
             return dateB - dateA;
           });
 
@@ -838,15 +1000,11 @@
                   bg: '#FF0000', color: '#fff'
                 },
                 'twitter': {
-                  color: '#24292f', // X.com black
-                  bg: 'rgba(0,0,0,0.10)',   // black low opacity
-                  svg: `<svg width="16" height="16" viewBox="0 0 1200 1227" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;"><path d="M1199.61 0H944.93L599.8 439.66L254.67 0H0L462.13 613.09L0 1227H254.67L599.8 787.34L944.93 1227H1199.6L737.47 613.91L1199.61 0ZM320.13 111.36L599.8 471.13L879.47 111.36H1040.53L599.8 693.13L159.07 111.36H320.13ZM320.13 1115.64H159.07L599.8 533.87L1040.53 1115.64H879.47L599.8 755.87L320.13 1115.64Z" fill="#24292f"/></svg>`
-                },
-                x: {
-                  color: '#24292f',
-                  bg: 'rgba(0,0,0,0.10)',
-                  svg: `<svg width=\"16\" height=\"16\" viewBox=\"0 0 1200 1227\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\" style=\"vertical-align:middle;\"><path d=\"M1199.61 0H944.93L599.8 439.66L254.67 0H0L462.13 613.09L0 1227H254.67L599.8 787.34L944.93 1227H1199.6L737.47 613.91L1199.61 0ZM320.13 111.36L599.8 471.13L879.47 111.36H1040.53L599.8 693.13L159.07 111.36H320.13ZM320.13 1115.64H159.07L599.8 533.87L1040.53 1115.64H879.47L599.8 755.87L320.13 1115.64Z" fill="#24292f" /></svg>`
-                },
+                  // Official X (Twitter) logo SVG
+                  svg: '<svg width="16" height="16" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;"><rect width="120" height="120" rx="24" fill="#000"/><path d="M86.4 32H104L73.6 68.16L108 108H86.56L64.96 82.56L40.96 108H23.36L55.36 69.44L22 32H44.16L63.04 54.56L86.4 32ZM82.24 101.12H88.8L48.32 38.56H41.28L82.24 101.12Z" fill="#fff"/></svg>',
+                  bg: '#000', color: '#fff',
+                  xName: 'x.com'
+                }
                 // Add more social icons here as needed
               };
               function hexToRgba(hex, alpha) {
@@ -878,11 +1036,14 @@
                 const font = arabic ? "font-family:'Tajawal','Amiri','Noto Sans Arabic','Cairo',sans-serif;direction:rtl;text-align:right;" : "";
                 if (socialIcons[lower]) {
                   const icon = socialIcons[lower];
-                  // Use a slightly transparent background for social badges (only affects social tags)
                   const bg = hexToRgba(icon.bg, 0.12);
-                  // Keep SVG icon colors intact so only the badge background is translucent
-                  const svg = icon.svg;
-                  return `<span style="display:inline-block;background:${bg};color:${icon.color};font-size:0.85em;padding:2px 10px 2px 8px;border-radius:50px;box-shadow:0 1px 4px #0001;white-space:nowrap;vertical-align:middle;gap:4px;${font}">${svg}<span style='margin-left:6px;vertical-align:middle;'>${displayText}</span></span>`;
+                  let svg = icon.svg;
+                  let label = displayText;
+                  // Special case for Twitter: show only X icon and name, remove Twitter label
+                  if (lower === 'twitter' && icon.xName) {
+                    label = icon.xName;
+                  }
+                  return `<span style="display:inline-block;background:${bg};color:${icon.color};font-size:0.85em;padding:2px 10px 2px 8px;border-radius:50px;box-shadow:0 1px 4px #0001;white-space:nowrap;vertical-align:middle;gap:4px;${font}">${svg}<span style='margin-left:6px;vertical-align:middle;'>${label}</span></span>`;
                 }
                 return `<span style="display:inline-block;background:#f5f5f5;color:#444;font-size:0.85em;padding:2px 10px 2px 10px;border-radius:50px;box-shadow:0 1px 4px #0001;white-space:nowrap;${font}">${displayText}</span>`;
               }
@@ -894,6 +1055,19 @@
                   const titleEl = card.querySelector('.card-title');
                   if (titleEl && titleEl.textContent && titleEl.textContent.length) {
                     titleEl.textContent = titleEl.textContent.charAt(0).toLowerCase() + titleEl.textContent.slice(1);
+                  }
+                }
+                // Move fade to left for Arabic tags, right for others
+                if (fadeDiv) {
+                  const isRtl = displayTags.some(isArabicTag);
+                  if (isRtl) {
+                    fadeDiv.style.right = 'auto';
+                    fadeDiv.style.left = '0';
+                    fadeDiv.style.background = 'linear-gradient(to left, transparent, rgba(245,240,230,0.6) 95%)';
+                  } else {
+                    fadeDiv.style.left = 'auto';
+                    fadeDiv.style.right = '0';
+                    fadeDiv.style.background = 'linear-gradient(to right, transparent, rgba(245,240,230,0.6) 95%)';
                   }
                 }
               }
@@ -928,56 +1102,4 @@
           </div>
         `;
       }
-    }
-    // Move these helper functions to top-level scope so they are always defined
-    async function fetchAllMarkdownFiles(apiUrl, category = null) {
-      const result = {};
-      const ghHeaders = { 'Accept': 'application/vnd.github.v3+json' };
-      if (typeof window !== 'undefined' && window.__GITHUB_TOKEN) ghHeaders['Authorization'] = `token ${window.__GITHUB_TOKEN}`;
-      const response = await fetch(apiUrl, { headers: ghHeaders });
-      if (!response.ok) return result;
-      const items = await response.json();
-      for (const item of items) {
-        if (item.type === 'dir') {
-          const sub = await fetchAllMarkdownFiles(`${apiUrl}/${item.name}`, item.name);
-          for (const [cat, files] of Object.entries(sub)) {
-            if (!result[cat]) result[cat] = [];
-            result[cat] = result[cat].concat(files);
-          }
-        } else if (item.name.endsWith('.md')) {
-          const cat = category || 'Root';
-          if (!result[cat]) result[cat] = [];
-          result[cat].push(item);
-        }
-      }
-      return result;
-    }
-    async function fetchAllMarkdownFilesLocal(basePath = '/wiki/', category = null) {
-      const result = {};
-      const resp = await fetch(basePath);
-      if (!resp.ok) return result;
-      const html = await resp.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, 'text/html');
-      const anchors = Array.from(doc.querySelectorAll('a'));
-      for (const a of anchors) {
-        const href = a.getAttribute('href');
-        if (!href || href === '../') continue;
-        if (href.endsWith('.md')) {
-          let cleaned = decodeURIComponent(href).replace(/^\/?/, '');
-          if (cleaned.toLowerCase().startsWith('wiki/')) cleaned = cleaned.replace(/^wiki\//i, '');
-          const parts = cleaned.split('/');
-          const cat = category || (parts.length > 1 ? parts[0] : 'Root');
-          if (!result[cat]) result[cat] = [];
-          result[cat].push({ name: parts.slice(-1)[0], path: cleaned, download_url: `/wiki/${cleaned}` });
-        } else if (!href.endsWith('.md') && !href.includes('.')) {
-          // Likely a subdirectory
-          const sub = await fetchAllMarkdownFilesLocal(basePath + href, href.replace(/\/$/, ''));
-          for (const [cat, files] of Object.entries(sub)) {
-            if (!result[cat]) result[cat] = [];
-            result[cat] = result[cat].concat(files);
-          }
-        }
-      }
-      return result;
     }

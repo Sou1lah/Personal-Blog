@@ -1,3 +1,26 @@
+    .banner-fade-overlay {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -2px;
+      height: 38px;
+      background: linear-gradient(to bottom, rgba(245,240,230,0.01) 0%, rgba(245,240,230,0.85) 90%);
+      pointer-events: none;
+    }
+    .post-banner {
+      position: relative;
+    }
+    .post-banner::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -2px;
+      height: 38px;
+      background: linear-gradient(to bottom, rgba(245,240,230,0.01) 0%, rgba(245,240,230,0.85) 90%);
+      pointer-events: none;
+      z-index: 2;
+    }
     @media (max-width: 600px) {
       html, body {
         font-size: 13px !important;

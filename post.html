@@ -28,7 +28,10 @@
   <div id="progressContainer" aria-hidden="true"><div id="progressBar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div></div>
   <div class="post-container">
     <button class="back-btn" id="backBtn" aria-label="Go back" title="Back">←</button>
-    <div class="post-banner"><img class="banner-img" src="https://raw.githubusercontent.com/Sou1lah/Personal-Blog/main/assets/ImagePlaceholder.jpg" alt="Banner"></div>
+    <div class="post-banner" style="position:relative;">
+      <img class="banner-img" src="https://raw.githubusercontent.com/Sou1lah/Personal-Blog/main/assets/ImagePlaceholder.jpg" alt="Banner" style="display:block;width:100%;height:auto;">
+      <div class="banner-fade-overlay" style="position:absolute;left:0;right:0;bottom:-2px;height:38px;background:linear-gradient(to bottom,rgba(245,240,230,0.01) 0%,rgba(245,240,230,0.85) 90%);pointer-events:none;"></div>
+    </div>
     <header class="post-header">
         <h1 id="postTitle">
           <span id="postTitleLoader" class="title-loader"></span>
