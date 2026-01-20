@@ -392,16 +392,16 @@
         }
 
         for (const [category, items] of Object.entries(categories)) {
+
           if (items.length === 0) continue;
 
-          for (const file of items) {
+          // Collect card data with date for sorting
+          const cardDataArr = await Promise.all(items.map(async (file) => {
             const title = file.name.replace('.md', '').replace(/_/g, ' ');
-            // Remove duplicated wiki/ if present
             let path = category === 'Root' ? `wiki/${file.name}` : `wiki/${category}/${file.name}`;
             if (path.startsWith('wiki/wiki/')) {
               path = path.replace('wiki/wiki/', 'wiki/');
             }
-            // Prefer an explicit download_url (local or remote). For Google Drive entries we set full URLs in download_url.
             let rawUrl;
             if (file.download_url) {
               rawUrl = file.download_url;
@@ -416,7 +416,6 @@
             }
             console.log('Raw note URL:', rawUrl);
 
-            // generate a slug for Drive-sourced notes (to hide /drive/ in URLs)
             let slug = '';
             if (rawUrl && rawUrl.includes('drive/v3/files')) {
               const id = (path && path.startsWith('drive/')) ? path.split('/').slice(-1)[0] : (file.name ? file.name.replace(/[^a-z0-9]/gi,'').slice(0,12) : Math.random().toString(36).slice(2,8));
@@ -424,17 +423,14 @@
               noteMappings.push({ slug, download_url: rawUrl, id, title, category });
             }
 
-            // Synchronously add a placeholder for tags, to be filled after fetch
             const cardId = `card-${category.replace(/[^a-zA-Z0-9]/g, '')}-${file.name.replace(/[^a-zA-Z0-9]/g, '')}`;
 
-            // Fetch the markdown file synchronously (blocking, but only for card metadata)
+            // Async fetch for note metadata
             let noteDate = '';
             try {
-              const xhr = new XMLHttpRequest();
-              xhr.open('GET', rawUrl, false); // synchronous
-              xhr.send(null);
-              if (xhr.status === 200) {
-                const md = xhr.responseText;
+              const resp = await fetch(rawUrl);
+              if (resp.ok) {
+                const md = await resp.text();
                 const { data } = parseFrontMatter(md);
                 noteDate = data.date || data.published || data.created || '';
               }
@@ -445,19 +441,40 @@
               noteDate = file.date;
             }
 
+            return {
+              cardId,
+              slug,
+              path,
+              rawUrl,
+              title,
+              noteDate,
+              category
+            };
+          }));
+
+          // Sort cards by date (newest first)
+          cardDataArr.sort((a, b) => {
+            // Parse date strings to Date objects
+            const dateA = a.noteDate ? new Date(a.noteDate) : new Date(0);
+            const dateB = b.noteDate ? new Date(b.noteDate) : new Date(0);
+            return dateB - dateA;
+          });
+
+          // Render sorted cards
+          for (const cardData of cardDataArr) {
             html += `
-              <article class="card" id="${cardId}" ${slug ? `data-slug="${slug}"` : `data-note="${encodeURIComponent(path)}"`} style="display: flex; flex-direction: column; min-height: 260px; position: relative; padding-bottom: 72px;">
-                <div class="note-banner" data-raw-url="${rawUrl}" style="width: 100%; height: 140px; background-color: #d4c5b9; background-size: cover; background-position: center; background-repeat: no-repeat; border-radius: 16px 16px 0 0; position: relative;">
-                  ${noteDate ? `<div class='note-date-top' style="position:absolute;top:8px;right:16px;font-size:0.98rem;font-family:'Playfair Display',Georgia,serif;font-weight:600;opacity:0.85;background:rgba(255,255,255,0.7);padding:2px 10px 2px 10px;border-radius:8px;z-index:2;">${noteDate}</div>` : ''}
+              <article class="card" id="${cardData.cardId}" ${cardData.slug ? `data-slug="${cardData.slug}"` : `data-note="${encodeURIComponent(cardData.path)}"`} style="display: flex; flex-direction: column; min-height: 260px; position: relative; padding-bottom: 72px;">
+                <div class="note-banner" data-raw-url="${cardData.rawUrl}" style="width: 100%; height: 140px; background-color: #d4c5b9; background-size: cover; background-position: center; background-repeat: no-repeat; border-radius: 16px 16px 0 0; position: relative;">
+                  ${cardData.noteDate ? `<div class='note-date-top' style="position:absolute;top:8px;right:16px;font-size:0.98rem;font-family:'Playfair Display',Georgia,serif;font-weight:600;opacity:0.85;background:rgba(255,255,255,0.7);padding:2px 10px 2px 10px;border-radius:8px;z-index:2;">${cardData.noteDate}</div>` : ''}
                 </div>
-                <h3 class="card-title" style="margin-top: 12px;">${title}</h3>
+                <h3 class="card-title" style="margin-top: 12px;">${cardData.title}</h3>
                 <div style="flex: 1;"></div>
                 <div class="card-footer" style="position: absolute; left: 16px; right: 12px; bottom: 12px; z-index: 2; pointer-events: auto; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
                   <div class="note-tags-scroll-wrap" style="flex: 1 1 auto; min-width: 0; max-width: calc(100% - 110px); overflow: hidden; position: relative;">
                     <div class="note-tags" style="display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; padding-bottom: 2px; -webkit-overflow-scrolling: touch; max-width: 100%; position: relative;"></div>
                     <div class="tags-fade" style="position: absolute; right: 0; top: 0; width: 40px; height: 100%; pointer-events: none; background: linear-gradient(to right, transparent, rgba(245,240,230,0.6) 95%);"></div>
                   </div>
-                  <button class="btn lock-btn" ${slug ? `data-slug="${slug}"` : `data-note="${encodeURIComponent(path)}"`} style="flex: 0 0 auto; padding: 6px 14px; border-radius:50px; min-width:64px;" title="Read" aria-label="Read"> <span class="read-label">Read</span> </button>
+                  <button class="btn lock-btn" ${cardData.slug ? `data-slug="${cardData.slug}"` : `data-note="${encodeURIComponent(cardData.path)}"`} style="flex: 0 0 auto; padding: 6px 14px; border-radius:50px; min-width:64px;" title="Read" aria-label="Read"> <span class="read-label">Read</span> </button>
                 </div>
                 <style>
                   .note-tags::-webkit-scrollbar {
@@ -473,8 +490,6 @@
             `;
           }
         }
-
-        notesCardsContainer.innerHTML = html;
 
         notesCardsContainer.innerHTML = html;
 
