@@ -27,8 +27,49 @@ color: white
 	Bequest of Mrs. Charles Wrightsman, 2019
 - **Object Number:**
 	2019.141.4
-- **Curatorial Department:**[European Paintings](https://www.metmuseum.org/departments/european-paintings-1250-1800)
+- **Curatorial Department:** [European Paintings](https://www.metmuseum.org/departments/european-paintings-1250-1800)
 
 <p align="center">
-	<img src="https://collectionapi.metmuseum.org/api/collection/v1/iiif/438100/1328084/main-image" alt="The Grand Canal, Venice by Canaletto" style="max-width: 100%; height: auto;" />
+	<img src="https://collectionapi.metmuseum.org/api/collection/v1/iiif/438100/1328084/main-image" alt="The Grand Canal, Venice by Canaletto" class="frame" />
 </p>
+
+<style>
+img.frame {
+	border-image: url('//s3-us-west-2.amazonaws.com/s.cdpn.io/4273/frame.png') 93 92 87 92 stretch stretch; 
+	border-color: #f4be52;
+	border-style: inset;
+	border-width: 60px;
+	display: block;
+	width: 40%;
+	height: auto;
+	background-color: #ffe;
+	margin: 0 auto;
+}
+@media all and (max-width: 500px) {
+	img.frame { 
+		border-width: 0px;
+		width: 100%; }
+}
+</style>
+<p align="center">
+	<img src="https://collectionapi.metmuseum.org/api/collection/v1/iiif/438100/1328084/main-image" alt="The Grand Canal, Venice by Canaletto" class="frame" />
+</p>
+
+<style>
+img.frame {
+	border-image: url('//s3-us-west-2.amazonaws.com/s.cdpn.io/4273/frame.png') 93 92 87 92 stretch stretch; 
+	border-color: #f4be52;
+	border-style: inset;
+	border-width: 60px;
+	display: block;
+	width: 100%;
+	height: auto;
+	background-color: #ffe;
+	margin: 0 auto;
+}
+@media all and (max-width: 500px) {
+	img.frame { 
+		border-width: 0px;
+		width: 100%; }
+}
+</style>

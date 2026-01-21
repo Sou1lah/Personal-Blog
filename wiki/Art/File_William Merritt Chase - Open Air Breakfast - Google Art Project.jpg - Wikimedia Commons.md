@@ -8,12 +8,25 @@ tags:	#art
 color: white
 ---
 
-<p align="center">
-	<img 
-		src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/William_Merritt_Chase_-_Open_Air_Breakfast_-_Google_Art_Project.jpg/1280px-William_Merritt_Chase_-_Open_Air_Breakfast_-_Google_Art_Project.jpg" 
-		alt="Open Air Breakfast — William Merritt Chase"
-		style="max-width:100%;height:auto;box-shadow:0 2px 8px rgba(0,0,0,0.15);border-radius:8px;"
-	/>
+<style>
+img[alt="Open Air Breakfast — William Merritt Chase"] {
+	border-image: url('//s3-us-west-2.amazonaws.com/s.cdpn.io/4273/frame.png') 93 92 87 92 stretch stretch;
+	border-color: #f4be52;
+	border-style: inset;
+	border-width: 50px;
+	display: block;
+	width: 100%;
+	height: auto;
+	background-color: #ffe;
+	margin: 0 auto;
+}
+@media all and (max-width: 500px) {
+	img[alt="Open Air Breakfast — William Merritt Chase"] {
+		border-width: 0px;
+		width: 100%;
+	}
+}
+</style>
 </p>
 
 ## Open Air Breakfast (1888)
@@ -27,7 +40,8 @@ color: white
 **Collection:** [Toledo Museum of Art](https://www.toledomuseum.org/)  
 **Public Domain Reproduction:** [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:William_Merritt_Chase_-_Open_Air_Breakfast_-_Google_Art_Project.jpg)
 
-![Open Air Breakfast — William Merritt Chase](https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/William_Merritt_Chase_-_Open_Air_Breakfast_-_Google_Art_Project.jpg/250px-William_Merritt_Chase_-_Open_Air_Breakfast_-_Google_Art_Project.jpg "Open Air Breakfast — William Merritt Chase")
+
+![Open Air Breakfast — William Merritt Chase](https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/William_Merritt_Chase_-_Open_Air_Breakfast_-_Google_Art_Project.jpg/1280px-William_Merritt_Chase_-_Open_Air_Breakfast_-_Google_Art_Project.jpg)
 
 ---
 
