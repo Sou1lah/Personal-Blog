@@ -1,5 +1,5 @@
 ---
-banner: https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Gustav_Klimt_-_Dame_mit_F%C3%A4cher.jpeg/330px-Gustav_Klimt_-_Dame_mit_F%C3%A4cher.jpeg
+banner: https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Gustav_Klimt_-_Dame_mit_F%C3%A4cher.jpeg/50px-Gustav_Klimt_-_Dame_mit_F%C3%A4cher.jpeg
 color: white
 text: black
 date: 2026-01-24
