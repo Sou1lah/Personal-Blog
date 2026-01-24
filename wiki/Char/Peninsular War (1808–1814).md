@@ -1,3 +1,12 @@
+---
+banner: https://cdn.britannica.com/39/152439-050-FBE98513/Arthur-Wellesley-British-removal-forces-flag-French-1812.jpg
+date: 2026-01-24
+description: "The Peninsular War (1808–1814) — major conflict in the Iberian Peninsula during the Napoleonic Wars."
+tags: #history #war #No_upchar
+color: white
+text: black
+---
+
 
 **The Peninsular War** (1808–1814) was a major conflict fought in the Iberian Peninsula, where Spain and Portugal, supported by Britain, resisted the invasion and occupation by Napoleonic France. The war began with the joint French and Spanish invasion of Portugal in 1807, but escalated in 1808 when France occupied Spain and Napoleon installed his brother Joseph Bonaparte as king. Most Spaniards rejected French rule, leading to widespread resistance and the emergence of large-scale guerrilla warfare.
 

@@ -1,8 +1,15 @@
 ---
 banner: https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/The_Yellow_Scale.jpg/330px-The_Yellow_Scale.jpg
+color: black
+text: white
+date: 2026-01-24
 ---
+# **The Yellow Scale** — František Kupka
+
+![The Yellow Scale — František Kupka](https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/The_Yellow_Scale.jpg/330px-The_Yellow_Scale.jpg)
+
 <style>
-img[alt="Open Air Breakfast — William Merritt Chase"] {
+img[alt="The Yellow Scale — František Kupka"] {
 	border-image: url('//s3-us-west-2.amazonaws.com/s.cdpn.io/4273/frame.png') 93 92 87 92 stretch stretch;
 	border-color: #f4be52;
 	border-style: inset;
@@ -14,17 +21,12 @@ img[alt="Open Air Breakfast — William Merritt Chase"] {
 	margin: 0 auto;
 }
 @media all and (max-width: 500px) {
-	img[alt="Open Air Breakfast — William Merritt Chase"] {
-		border-width: 0px;
+	img[alt="The Yellow Scale — František Kupka"] {
+		border-width: 20px;
 		width: 100%;
 	}
 }
 </style>
-
-# **The Yellow Scale** — František Kupka
-
-<img class="frame" src="https://www.washingtonpost.com/graphics/2020/entertainment/frantisek-kupka-the-yellow-scale/img/1800/OAVKXPA3PUI6VDKYLLBWACLHUE.jpg" alt="Music, Florine Stettheimer">
-
 
 
 | **Field**  | **Details**                               |
