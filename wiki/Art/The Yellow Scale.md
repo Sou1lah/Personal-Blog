@@ -1,5 +1,5 @@
 ---
-banner: https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/The_Yellow_Scale.jpg/330px-The_Yellow_Scale.jpg
+banner: https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh-CJQX6HopZdKuIC4MUmIeQ8U-6cpmUicot-LaAefu0u1Sff5Kqt9_-H6KoEy5uYnoQVBw2riT7ksisk-kZzb3rWPAHb8yP38QBVmtmJocc9A0X8oJMtZaU2jH_AzA3tolPbA911QZI7I/w1200-h630-p-k-no-nu/Self-Portrait+-+Frantisek+Kupka.jpg
 color: black
 text: white
 date: 2026-01-24

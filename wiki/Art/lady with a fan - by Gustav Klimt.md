@@ -1,5 +1,5 @@
 ---
-banner: https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Gustav_Klimt_-_Dame_mit_F%C3%A4cher.jpeg/50px-Gustav_Klimt_-_Dame_mit_F%C3%A4cher.jpeg
+banner: https://www.belvedere.at/sites/default/files/styles/full_width/public/2021-03/Ex13602_presse_Foto%20Markus%20Guschelbauer%20I%20Belvedere%2C%20Wien_web.jpg?h=e26bee16&itok=s5S7GOpk
 color: white
 text: black
 date: 2026-01-24
