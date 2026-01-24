@@ -3,6 +3,8 @@ banner: https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Gustav_Klimt_-
 color: white
 text: black
 date: 2026-01-24
+tags: #art #No_upchar
+description: "Lady with a Fan (1917–1918) by Gustav Klimt — details and artwork information."
 ---
 <style>
 img[alt="Lady with a Fan, Gustav Klimt"] {

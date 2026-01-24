@@ -3,8 +3,9 @@ banner: https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/The_Yellow_Sca
 color: black
 text: white
 date: 2026-01-24
+tags: #art #No_upchar
+description: "The Yellow Scale (c. 1907–1908) by František Kupka — details and artwork information."
 ---
-# **The Yellow Scale** — František Kupka
 
 ![The Yellow Scale — František Kupka](https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/The_Yellow_Scale.jpg/330px-The_Yellow_Scale.jpg)
 
